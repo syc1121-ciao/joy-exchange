@@ -1,3 +1,8 @@
+export type Continent =
+  | "europe"
+  | "asia"
+  | "north-america";
+
 export type PlaceStatus =
   | "home"
   | "visited"
@@ -8,6 +13,7 @@ export type Place = {
   id: string;
   name: string;
   country: string;
+  continent: Continent;
 
   longitude: number;
   latitude: number;
