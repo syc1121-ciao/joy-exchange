@@ -2,15 +2,19 @@ import { geoEqualEarth } from "d3-geo";
 
 import type { Place, ProjectedPlace } from "./types";
 
-export const MAP_WIDTH = 800;
-export const MAP_HEIGHT = 480;
+export const MAP_WIDTH = 1600;
+export const MAP_HEIGHT = 960;
+
+export const MAP_SCALE = 294;
 
 const projection = geoEqualEarth()
   .translate([MAP_WIDTH / 2, MAP_HEIGHT / 2])
-  .scale(147)
+  .scale(MAP_SCALE)
   .center([0, 0]);
 
-export function projectPlace(place: Place): ProjectedPlace | null {
+export function projectPlace(
+  place: Place,
+): ProjectedPlace | null {
   const position = projection([
     place.longitude,
     place.latitude,
@@ -27,10 +31,13 @@ export function projectPlace(place: Place): ProjectedPlace | null {
   };
 }
 
-export function projectPlaces(places: Place[]): ProjectedPlace[] {
+export function projectPlaces(
+  places: Place[],
+): ProjectedPlace[] {
   return places
     .map(projectPlace)
     .filter(
-      (place): place is ProjectedPlace => place !== null,
+      (place): place is ProjectedPlace =>
+        place !== null,
     );
 }

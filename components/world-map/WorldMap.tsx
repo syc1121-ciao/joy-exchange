@@ -20,6 +20,7 @@ import Marker from "./Marker";
 import { places } from "./places";
 import {
   MAP_HEIGHT,
+  MAP_SCALE,
   MAP_WIDTH,
   projectPlaces,
 } from "./projection";
@@ -209,11 +210,11 @@ export default function WorldMap() {
         <div
           ref={mapContainerRef}
           className={[
-            "relative w-full overflow-hidden",
-            "touch-none select-none rounded-3xl",
-            "border border-black/5 bg-[#eeeae4]",
-            "cursor-grab active:cursor-grabbing",
-          ].join(" ")}
+  "relative w-full overflow-hidden",
+  "touch-none select-none rounded-3xl",
+  "border border-black/5 bg-[#eeeae4]",
+  "cursor-default",
+].join(" ")}
           style={{
             aspectRatio: `${MAP_WIDTH} / ${MAP_HEIGHT}`,
           }}
@@ -230,45 +231,48 @@ export default function WorldMap() {
         >
           {/* 地圖和 HTML Marker 共用同一個 transform */}
           <div
-            className="absolute inset-0"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: "top left",
-              willChange: "transform",
-            }}
-          >
+  className="absolute left-0 top-0 h-full w-full"
+  style={{
+    transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+    transformOrigin: "0 0",
+  }}
+>
+          
             <ComposableMap
               projection="geoEqualEarth"
               projectionConfig={{
-                scale: 147,
-                center: createCoordinates(0, 0),
-              }}
+  scale: MAP_SCALE,
+  center: createCoordinates(0, 0),
+}}
               width={MAP_WIDTH}
               height={MAP_HEIGHT}
-              className="absolute inset-0 h-full w-full"
+              className="block h-full w-full"
             >
               <Geographies geography={geoData}>
                 {({ geographies }) =>
                   geographies.map((geo, index) => (
                     <Geography
-                      key={`${geo.id ?? "country"}-${index}`}
-                      geography={geo}
-                      fill="#d8d3cb"
-                      stroke="#f7f5f2"
-                      strokeWidth={0.6 / zoom}
-                      style={{
-                        default: {
-                          outline: "none",
-                        },
-                        hover: {
-                          fill: "#c5beb4",
-                          outline: "none",
-                        },
-                        pressed: {
-                          outline: "none",
-                        },
-                      }}
-                    />
+  key={`${geo.id ?? "country"}-${index}`}
+  geography={geo}
+  fill="#d8d3cb"
+  stroke="#f7f5f2"
+  strokeWidth={0.8 / zoom}
+  tabIndex={-1}
+  className="outline-none"
+  style={{
+    default: {
+      outline: "none",
+    },
+    hover: {
+      fill: "#c5beb4",
+      outline: "none",
+    },
+    pressed: {
+      fill: "#bbb4aa",
+      outline: "none",
+    },
+  }}
+/>
                   ))
                 }
               </Geographies>
