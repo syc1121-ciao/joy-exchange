@@ -11,31 +11,46 @@ export default function Navbar() {
       </div>
 
       {/* 中間選單 */}
-      <ul className="flex gap-10 text-sm uppercase tracking-widest items-center">
-        <li>
-          <Link href="/">Home</Link>
-        </li>
+      <ul className="flex items-center gap-8 text-sm uppercase tracking-widest">
+  <li>
+    <Link href="/" className="transition hover:text-slate-500">
+      Home
+    </Link>
+  </li>
 
-        <li>
-          <Link href="/journal">Journal</Link>
-        </li>
+  <li>
+    <Link
+      href="/dashboard"
+      className="transition hover:text-slate-500"
+    >
+      Dashboard
+    </Link>
+  </li>
 
-        <li>
-          <Link href="/destinations">Destinations</Link>
-        </li>
+  <li>
+    <Link href="/cities" className="transition hover:text-slate-500">
+      Travel
+    </Link>
+  </li>
 
-        <li>
-          <Link href="/gallery">Gallery</Link>
-        </li>
+  <li>
+    <Link href="/journal" className="transition hover:text-slate-500">
+      Journal
+    </Link>
+  </li>
 
-        <li>
-          <Link href="/about">About Me</Link>
-        </li>
+  <li>
+    <Link href="/gallery" className="transition hover:text-slate-500">
+      Gallery
+    </Link>
+  </li>
 
-        <li>
-          <Link href="/memo">Memo</Link>
-        </li>
-      </ul>
+  <li>
+    <Link href="/memo" className="transition hover:text-slate-500">
+      Memo
+    </Link>
+  </li>
+</ul>
 
       {/* 右邊 Icon */}
       <div className="flex gap-4 text-xl">

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 export default function Hero() {
   return (
     <section className="max-w-7xl mx-auto px-8 py-24">
@@ -30,6 +31,13 @@ export default function Hero() {
         正在歐洲展開。
 
     </p>
+    <Link
+  href="/dashboard"
+  className="mt-8 inline-flex items-center gap-3 rounded-full bg-slate-900 px-7 py-4 text-sm uppercase tracking-[0.2em] text-white transition hover:bg-slate-700"
+>
+  Open Dashboard
+  <span>→</span>
+</Link>
 
     <button
         className="
