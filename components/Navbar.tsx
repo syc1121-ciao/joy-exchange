@@ -6,7 +6,7 @@ export default function Navbar() {
       {/* 左邊 Logo */}
       <div>
         <h1 className="text-2xl font-serif italic">
-          Joy's Exchange Adventure
+          CIAO's TUM Exchange journal
         </h1>
       </div>
 
