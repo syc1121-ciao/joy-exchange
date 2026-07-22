@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
+import FlightProvider from "@/components/flights/FlightProvider";
 import { Inter, Cormorant_Garamond } from "next/font/google";
+import AuthSessionProvider from "@/components/AuthSessionProvider";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
 });
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-serif",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,10 +28,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-Hant">
-      <body className={`${inter.variable} ${cormorant.variable}`}>
-        {children}
-      </body>
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+      <body>
+  <AuthSessionProvider>
+    <FlightProvider>
+      {children}
+    </FlightProvider>
+  </AuthSessionProvider>
+</body>
     </html>
   );
 }

@@ -7,15 +7,15 @@ export default function Hero() {
     {/* 文字 */}
     <div className="min-w-0">
       <p className="text-xs uppercase tracking-[0.32em] text-slate-500">
-        Exchange Student 2027
+        Exchange Student 2026/2027 Winter
       </p>
 
       <h1 className="mt-5 max-w-xl font-serif text-5xl leading-[0.96] text-slate-950 sm:text-6xl md:text-7xl lg:text-8xl">
-        Collect moments, not things.
+        TUM Germany
       </h1>
 
       <p className="mt-6 max-w-md text-sm leading-7 text-slate-600 sm:text-base">
-        一場屬於我的交換冒險，正在歐洲展開。
+        玩遍歐洲的高山小河大海
       </p>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -26,12 +26,12 @@ export default function Hero() {
           OPEN DASHBOARD →
         </Link>
 
-        <Link
+        {/* <Link
           href="/journal"
           className="inline-flex w-full items-center justify-center rounded-full border border-black/10 px-6 py-4 text-xs tracking-[0.16em] text-slate-800 sm:w-auto"
         >
           EXPLORE JOURNAL
-        </Link>
+        </Link> */}
       </div>
     </div>
 

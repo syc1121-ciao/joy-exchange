@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
-/* ---------- Theme ---------- */
+/* ---------- Tailwind v4 Theme Binding ---------- */
+@theme {
+  /* 讓 Tailwind 的 font-sans 與 font-serif 自動讀取 Next.js 注入的 CSS 變數 */
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+}
 
+/* ---------- Custom Theme Colors ---------- */
 :root {
   --background: #faf8f5;
   --foreground: #1f1f1f;
-
-  --font-sans: var(--font-sans);
-  --font-serif: var(--font-serif);
 }
 
-/* ---------- Base ---------- */
-
+/* ---------- Base Styles ---------- */
 * {
   box-sizing: border-box;
 }
@@ -23,15 +25,11 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
-
+  /* 自動套用主題中的 font-sans */
+  font-family: var(--font-sans); 
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-}
-
-.font-serif {
-  font-family: var(--font-serif);
 }
 
 img {

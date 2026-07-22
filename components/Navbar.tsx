@@ -6,9 +6,9 @@ import Link from "next/link";
 const navItems = [
   { label: "HOME", href: "/" },
   { label: "DASHBOARD", href: "/dashboard" },
-  { label: "TRAVEL", href: "/travel" },
+  //{ label: "TRAVEL", href: "/travel" },
   { label: "JOURNAL", href: "/journal" },
-  { label: "GALLERY", href: "/gallery" },
+  //{ label: "GALLERY", href: "/gallery" },
   { label: "MEMO", href: "/memo" },
 ];
 
@@ -22,7 +22,7 @@ export default function Navbar() {
           href="/"
           className="font-serif text-xl italic text-slate-900 md:text-2xl"
         >
-          Joy&apos;s Journey
+          Ciao&apos;s Journey
         </Link>
 
         {/* 桌機選單 */}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import UpcomingFlight from "@/components/flights/UpcomingFlight";
 import CountdownCard from "@/components/dashboard/CountdownCard";
 import MemoCard from "@/components/dashboard/MemoCard";
 import CitiesCard from "@/components/dashboard/CitiesCard";
@@ -25,7 +25,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Dashboard 卡片 */}
+        <section className="px-4 py-12 sm:px-6 md:px-10 md:py-20">
+  <div className="mx-auto max-w-7xl">
+    <UpcomingFlight variant="dashboard" />
+  </div>
+</section>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          
           <CountdownCard />
 
           <MemoCard />
