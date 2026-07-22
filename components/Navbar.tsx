@@ -1,8 +1,8 @@
 import Link from "next/link";
+
 export default function Navbar() {
   return (
     <nav className="flex justify-between items-center px-10 py-6 border-b bg-white">
-
       {/* 左邊 Logo */}
       <div>
         <h1 className="text-2xl font-serif italic">
@@ -11,32 +11,37 @@ export default function Navbar() {
       </div>
 
       {/* 中間選單 */}
-      <ul className="flex gap-10 text-sm uppercase tracking-widest">
+      <ul className="flex gap-10 text-sm uppercase tracking-widest items-center">
+        <li>
+          <Link href="/">Home</Link>
+        </li>
 
-        <li>Home</li>
+        <li>
+          <Link href="/journal">Journal</Link>
+        </li>
 
-        <li>Journal</li>
+        <li>
+          <Link href="/destinations">Destinations</Link>
+        </li>
 
-        <li>Destinations</li>
+        <li>
+          <Link href="/gallery">Gallery</Link>
+        </li>
 
-        <li>Gallery</li>
+        <li>
+          <Link href="/about">About Me</Link>
+        </li>
 
-        <li>About Me</li>
-        <a href="/memo">
-  Memo
-</a>
-
+        <li>
+          <Link href="/memo">Memo</Link>
+        </li>
       </ul>
 
       {/* 右邊 Icon */}
       <div className="flex gap-4 text-xl">
-
         <button>🌙</button>
-
         <button>🔍</button>
-
       </div>
-
     </nav>
   );
 }
