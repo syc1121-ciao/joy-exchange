@@ -1,62 +1,78 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
+const navItems = [
+  { label: "HOME", href: "/" },
+  { label: "DASHBOARD", href: "/dashboard" },
+  { label: "TRAVEL", href: "/travel" },
+  { label: "JOURNAL", href: "/journal" },
+  { label: "GALLERY", href: "/gallery" },
+  { label: "MEMO", href: "/memo" },
+];
+
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <nav className="flex justify-between items-center px-10 py-6 border-b bg-white">
-      {/* 左邊 Logo */}
-      <div>
-        <h1 className="text-2xl font-serif italic">
-          CIAO's TUM Exchange journal
-        </h1>
+    <header className="relative z-50 border-b border-black/10 bg-[#faf8f5]">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:h-20 md:px-10">
+        <Link
+          href="/"
+          className="font-serif text-xl italic text-slate-900 md:text-2xl"
+        >
+          Joy&apos;s Journey
+        </Link>
+
+        {/* 桌機選單 */}
+        <nav className="hidden items-center gap-8 md:flex">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-xs tracking-[0.16em] text-slate-700 transition hover:text-black"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* 手機按鈕 */}
+        <button
+          type="button"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 md:hidden"
+          aria-label="Toggle navigation"
+          aria-expanded={isOpen}
+          onClick={() => {
+            setIsOpen((current) => !current);
+          }}
+        >
+          <span className="text-xl">
+            {isOpen ? "×" : "☰"}
+          </span>
+        </button>
       </div>
 
-      {/* 中間選單 */}
-      <ul className="flex items-center gap-8 text-sm uppercase tracking-widest">
-  <li>
-    <Link href="/" className="transition hover:text-slate-500">
-      Home
-    </Link>
-  </li>
-
-  <li>
-    <Link
-      href="/dashboard"
-      className="transition hover:text-slate-500"
-    >
-      Dashboard
-    </Link>
-  </li>
-
-  <li>
-    <Link href="/cities" className="transition hover:text-slate-500">
-      Travel
-    </Link>
-  </li>
-
-  <li>
-    <Link href="/journal" className="transition hover:text-slate-500">
-      Journal
-    </Link>
-  </li>
-
-  <li>
-    <Link href="/gallery" className="transition hover:text-slate-500">
-      Gallery
-    </Link>
-  </li>
-
-  <li>
-    <Link href="/memo" className="transition hover:text-slate-500">
-      Memo
-    </Link>
-  </li>
-</ul>
-
-      {/* 右邊 Icon */}
-      <div className="flex gap-4 text-xl">
-        <button>🌙</button>
-        <button>🔍</button>
-      </div>
-    </nav>
+      {/* 手機選單 */}
+      {isOpen && (
+        <nav className="absolute inset-x-0 top-full border-b border-black/10 bg-[#faf8f5] px-4 py-4 shadow-lg md:hidden">
+          <div className="flex flex-col">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="border-b border-black/5 py-4 text-sm tracking-[0.14em] text-slate-700 last:border-0"
+                onClick={() => {
+                  setIsOpen(false);
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+    </header>
   );
 }

@@ -341,20 +341,20 @@ export default function WorldMap() {
   };
 
   return (
-    <section className="bg-[#f7f5f2] px-5 py-24 md:px-10">
+    <section className="bg-[#f7f5f2] px-4 py-14 sm:px-5 sm:py-18 md:px-10 md:py-24">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-10 text-center">
+        <header className="mb-7 text-center md:mb-10">
           <p className="text-sm uppercase tracking-[0.35em] text-slate-500">
             My Journey
           </p>
 
-          <h2 className="mt-4 font-serif text-4xl text-slate-900 md:text-5xl">
+          <h2 className="mt-3 font-serif text-3xl leading-tight text-slate-900 sm:text-4xl md:mt-4 md:text-5xl">
             {selectedRegion
               ? `Explore ${selectedRegion.name}.`
               : "Choose your next adventure."}
           </h2>
 
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-500">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 md:mt-4">
             {selectedRegion
               ? "Scroll to zoom, drag to explore, and select a star."
               : "Select a continent to discover the places on my travel list."}

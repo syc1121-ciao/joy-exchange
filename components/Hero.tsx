@@ -2,74 +2,50 @@ import Image from "next/image";
 import Link from "next/link";
 export default function Hero() {
   return (
-    <section className="max-w-7xl mx-auto px-8 py-24">
-
-      <div className="grid grid-cols-2 gap-16 items-center">
-
-        {/* 左邊文字 */}
-
-        <div>
-
-    <p className="uppercase tracking-[0.4em] text-gray-500 text-sm mb-6">
+    <section className="overflow-hidden bg-[#faf8f5] px-4 py-12 sm:px-6 md:px-10 md:py-20">
+  <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 md:grid-cols-2 md:items-center md:gap-16">
+    {/* 文字 */}
+    <div className="min-w-0">
+      <p className="text-xs uppercase tracking-[0.32em] text-slate-500">
         Exchange Student 2027
-    </p>
+      </p>
 
-    <h1 className="text-6xl font-serif leading-tight">
+      <h1 className="mt-5 max-w-xl font-serif text-5xl leading-[0.96] text-slate-950 sm:text-6xl md:text-7xl lg:text-8xl">
+        Collect moments, not things.
+      </h1>
 
-        Collect moments,
-        <br />
+      <p className="mt-6 max-w-md text-sm leading-7 text-slate-600 sm:text-base">
+        一場屬於我的交換冒險，正在歐洲展開。
+      </p>
 
-        not things.
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/dashboard"
+          className="inline-flex w-full items-center justify-center rounded-full bg-slate-950 px-6 py-4 text-xs tracking-[0.16em] text-white sm:w-auto"
+        >
+          OPEN DASHBOARD →
+        </Link>
 
-    </h1>
+        <Link
+          href="/journal"
+          className="inline-flex w-full items-center justify-center rounded-full border border-black/10 px-6 py-4 text-xs tracking-[0.16em] text-slate-800 sm:w-auto"
+        >
+          EXPLORE JOURNAL
+        </Link>
+      </div>
+    </div>
 
-    <p className="mt-8 text-lg text-gray-600 leading-8">
-
-        一場屬於我的交換冒險，
-        <br />
-
-        正在歐洲展開。
-
-    </p>
-    <Link
-  href="/dashboard"
-  className="mt-8 inline-flex items-center gap-3 rounded-full bg-slate-900 px-7 py-4 text-sm uppercase tracking-[0.2em] text-white transition hover:bg-slate-700"
->
-  Open Dashboard
-  <span>→</span>
-</Link>
-
-    <button
-        className="
-        mt-10
-        rounded-full
-        bg-black
-        text-white
-        px-8
-        py-4
-        hover:bg-neutral-700
-        transition
-        "
-    >
-        Explore Journal
-    </button>
-
-</div>
-
-        {/* 右邊圖片 */}
-{/* 右邊圖片 */}
-
-<div className="relative h-[600px] rounded-3xl overflow-hidden shadow-2xl">
-
-    <Image
-        src="/images/cambridge.jpg"
-        alt="Europe"
-        fill
-        className="object-cover"
-    />
-
-</div>
-</div>
-    </section>
+    {/* 圖片 */}
+    <div className="relative min-w-0">
+      <div className="mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] md:max-w-md">
+        <img
+          src="/images/cambridge.jpg"
+          alt="Exchange journey"
+          className="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </div>
+</section>
   );
 }
