@@ -28,10 +28,11 @@ export default function NewGalleryForm({
 }: NewGalleryFormProps) {
   const router = useRouter();
 
-  const [image, setImage] =
-    useState<File | null>(null);
-  const [title, setTitle] = useState("");
-  const [caption, setCaption] =
+  const [images, setImages] =
+    useState<File[]>([]);
+  const [albumTitle, setAlbumTitle] =
+    useState("");
+  const [albumCaption, setAlbumCaption] =
     useState("");
   const [placeId, setPlaceId] =
     useState("");
@@ -44,24 +45,23 @@ export default function NewGalleryForm({
   const [isFeatured, setIsFeatured] =
     useState(false);
 
-  const [previewUrl, setPreviewUrl] =
-    useState("");
+  const [previewUrls, setPreviewUrls] =
+    useState<string[]>([]);
   const [loading, setLoading] =
     useState(false);
   const [errorMessage, setErrorMessage] =
     useState("");
 
   function handleImageChange(
-    file: File | null,
+    files: FileList | null,
   ) {
-    setImage(file);
+    const nextFiles = Array.from(files ?? []);
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
 
-    setPreviewUrl(
-      file ? URL.createObjectURL(file) : "",
+    setImages(nextFiles);
+    setPreviewUrls(
+      nextFiles.map((file) => URL.createObjectURL(file)),
     );
   }
 
@@ -70,8 +70,8 @@ export default function NewGalleryForm({
   ) {
     event.preventDefault();
 
-    if (!image) {
-      setErrorMessage("請選擇一張圖片。");
+    if (images.length === 0) {
+      setErrorMessage("請至少選擇一張圖片。" );
       return;
     }
 
@@ -81,9 +81,8 @@ export default function NewGalleryForm({
     try {
       const formData = new FormData();
 
-      formData.append("image", image);
-      formData.append("title", title);
-      formData.append("caption", caption);
+      formData.append("albumTitle", albumTitle);
+      formData.append("albumCaption", albumCaption);
       formData.append("placeId", placeId);
       formData.append(
         "journalId",
@@ -98,6 +97,10 @@ export default function NewGalleryForm({
         "isFeatured",
         String(isFeatured),
       );
+
+      images.forEach((image) => {
+        formData.append("images", image);
+      });
 
       const response = await fetch(
         "/api/gallery",
@@ -146,74 +149,79 @@ export default function NewGalleryForm({
           htmlFor="image"
           className="mb-2 block font-medium"
         >
-          Image
+          Images
         </label>
 
         <input
           id="image"
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
+          multiple
           required
           onChange={(event) =>
             handleImageChange(
-              event.target.files?.[0] ??
-                null,
+              event.target.files,
             )
           }
           className="w-full rounded-xl border border-neutral-300 p-3"
         />
 
         <p className="mt-2 text-sm text-neutral-500">
-          JPG、PNG、WebP 或 GIF，最大 10 MB。
+          可一次選多張 JPG、PNG、WebP 或 GIF，單張最大 10 MB。
         </p>
       </div>
 
-      {previewUrl && (
-        <div className="overflow-hidden rounded-3xl bg-neutral-100">
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="max-h-[500px] w-full object-contain"
-          />
+      {previewUrls.length > 0 && (
+        <div className="overflow-hidden rounded-3xl bg-neutral-100 p-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {previewUrls.map((url, index) => (
+              <img
+                key={url}
+                src={url}
+                alt={`Preview ${index + 1}`}
+                className="h-40 w-full rounded-2xl object-cover"
+              />
+            ))}
+          </div>
         </div>
       )}
 
       <div>
         <label
-          htmlFor="title"
+          htmlFor="albumTitle"
           className="mb-2 block font-medium"
         >
-          Title
+          Album Title
         </label>
 
         <input
-          id="title"
-          value={title}
+          id="albumTitle"
+          value={albumTitle}
           onChange={(event) =>
-            setTitle(event.target.value)
+            setAlbumTitle(event.target.value)
           }
           required
-          placeholder="Sunset in Munich"
+          placeholder="Bangkok weekend"
           className="w-full rounded-xl border border-neutral-300 p-3"
         />
       </div>
 
       <div>
         <label
-          htmlFor="caption"
+          htmlFor="albumCaption"
           className="mb-2 block font-medium"
         >
-          Caption
+          Album Description
         </label>
 
         <textarea
-          id="caption"
+          id="albumCaption"
           rows={4}
-          value={caption}
+          value={albumCaption}
           onChange={(event) =>
-            setCaption(event.target.value)
+            setAlbumCaption(event.target.value)
           }
-          placeholder="這張照片的故事……"
+          placeholder="這個相簿的說明……"
           className="w-full rounded-xl border border-neutral-300 p-3"
         />
       </div>

@@ -120,6 +120,7 @@ export default function WorldMap() {
               continent: string;
               latitude: number;
               longitude: number;
+              image?: string | null;
             }>;
           };
 
@@ -145,7 +146,7 @@ export default function WorldMap() {
               longitude: place.longitude,
               latitude: place.latitude,
               icon: "📍",
-              image: "",
+              image: place.image ?? "",
               date: "Published",
               description:
                 place.description ??

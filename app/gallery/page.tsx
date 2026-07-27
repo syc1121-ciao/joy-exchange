@@ -3,6 +3,16 @@ import Link from "next/link";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+function normalizeCitySlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -61,7 +71,16 @@ function formatDate(dateString: string | null) {
   }).format(date);
 }
 
-export default async function PublicGalleryPage() {
+export default async function PublicGalleryPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ city?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const selectedCitySlug = normalizeCitySlug(
+    resolvedSearchParams?.city ?? "",
+  );
+
   const { data, error } = await supabaseAdmin
     .from("gallery_images")
     .select(`
@@ -111,6 +130,23 @@ export default async function PublicGalleryPage() {
   }
 
   const images = (data ?? []) as GalleryImage[];
+  const filteredImages = selectedCitySlug
+    ? images.filter((image) => {
+        const place = Array.isArray(image.place)
+          ? image.place[0]
+          : image.place;
+
+        return place?.slug
+          ? normalizeCitySlug(place.slug) === selectedCitySlug
+          : false;
+      })
+    : images;
+  const activeCity = selectedCitySlug
+    ? filteredImages[0]?.place
+    : null;
+  const activeCityLabel = Array.isArray(activeCity)
+    ? activeCity[0]
+    : activeCity;
 
   return (
     <main className="min-h-screen bg-[#faf8f5]">

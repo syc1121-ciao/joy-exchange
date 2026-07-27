@@ -216,12 +216,11 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
 
-    const image = formData.get("image");
-    const title = cleanText(
-      formData.get("title"),
+    const albumTitle = cleanText(
+      formData.get("albumTitle"),
     );
-    const caption =
-      cleanText(formData.get("caption")) || null;
+    const albumCaption =
+      cleanText(formData.get("albumCaption")) || null;
     const placeId =
       cleanText(formData.get("placeId")) ||
       null;
@@ -237,11 +236,15 @@ export async function POST(request: Request) {
     const isFeatured = parseBoolean(
       formData.get("isFeatured"),
     );
+    const uploadedImages = formData.getAll("images");
+    const uploadedFiles = uploadedImages.filter(
+      (item): item is File => item instanceof File,
+    );
 
-    if (!title) {
+    if (!albumTitle) {
       return NextResponse.json(
         {
-          error: "Title is required.",
+          error: "Album title is required.",
         },
         {
           status: 400,
@@ -249,7 +252,18 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!(image instanceof File)) {
+    if (uploadedFiles.length === 0) {
+      return NextResponse.json(
+        {
+          error: "At least one image is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (uploadedFiles.length !== uploadedImages.length) {
       return NextResponse.json(
         {
           error: "Image is required.",
@@ -260,7 +274,11 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!allowedImageTypes.includes(image.type)) {
+    const invalidImageType = uploadedFiles.find(
+      (item) => !allowedImageTypes.includes(item.type),
+    );
+
+    if (invalidImageType) {
       return NextResponse.json(
         {
           error:
@@ -272,7 +290,11 @@ export async function POST(request: Request) {
       );
     }
 
-    if (image.size > maximumFileSize) {
+    const oversizedImage = uploadedFiles.find(
+      (item) => item.size > maximumFileSize,
+    );
+
+    if (oversizedImage) {
       return NextResponse.json(
         {
           error:
@@ -302,64 +324,85 @@ export async function POST(request: Request) {
       );
     }
 
-    const safeFileName = sanitizeFileName(
-      image.name,
-    );
+    const uploadedRecords = [] as Array<{
+      title: string;
+      caption: string | null;
+      image_url: string;
+      storage_path: string;
+      place_id: string | null;
+      journal_id: string | null;
+      taken_at: string | null;
+      sort_order: number;
+      is_featured: boolean;
+      author_email: string;
+    }>;
 
-    const storagePath = `${authorEmail}/${crypto.randomUUID()}-${safeFileName}`;
+    const storagePathsToCleanup: string[] = [];
 
-    const imageBuffer =
-      await image.arrayBuffer();
+    for (const file of uploadedImages as File[]) {
+      const safeFileName = sanitizeFileName(file.name);
+      const storagePath = `${authorEmail}/${crypto.randomUUID()}-${safeFileName}`;
+      const imageBuffer = await file.arrayBuffer();
 
-    const { error: uploadError } =
-      await supabaseAdmin.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from(GALLERY_BUCKET)
         .upload(storagePath, imageBuffer, {
-          contentType: image.type,
+          contentType: file.type,
           cacheControl: "3600",
           upsert: false,
         });
 
-    if (uploadError) {
-      return NextResponse.json(
-        {
-          error: uploadError.message,
-        },
-        {
-          status: 500,
-        },
-      );
-    }
+      if (uploadError) {
+        for (const cleanupPath of storagePathsToCleanup) {
+          await supabaseAdmin.storage
+            .from(GALLERY_BUCKET)
+            .remove([cleanupPath]);
+        }
 
-    uploadedStoragePath = storagePath;
+        return NextResponse.json(
+          {
+            error: uploadError.message,
+          },
+          {
+            status: 500,
+          },
+        );
+      }
 
-    const {
-      data: publicUrlData,
-    } = supabaseAdmin.storage
-      .from(GALLERY_BUCKET)
-      .getPublicUrl(storagePath);
+      const {
+        data: publicUrlData,
+      } = supabaseAdmin.storage
+        .from(GALLERY_BUCKET)
+        .getPublicUrl(storagePath);
 
-    const { data, error } = await supabaseAdmin
-      .from("gallery_images")
-      .insert({
-        title,
-        caption,
+      uploadedStoragePath = storagePath;
+      storagePathsToCleanup.push(storagePath);
+
+      uploadedRecords.push({
+        title: albumTitle,
+        caption: albumCaption,
         image_url: publicUrlData.publicUrl,
         storage_path: storagePath,
         place_id: placeId,
         journal_id: journalId,
         taken_at: takenAt,
-        sort_order: sortOrder,
+        sort_order: sortOrder + uploadedRecords.length,
         is_featured: isFeatured,
         author_email: authorEmail,
-      })
-      .select("*")
-      .single();
+      });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("gallery_images")
+      .insert(uploadedRecords)
+      .select("*");
 
     if (error) {
-      await supabaseAdmin.storage
-        .from(GALLERY_BUCKET)
-        .remove([storagePath]);
+      for (const cleanupPath of storagePathsToCleanup) {
+        await supabaseAdmin.storage
+          .from(GALLERY_BUCKET)
+          .remove([cleanupPath]);
+      }
 
       return NextResponse.json(
         {
@@ -374,8 +417,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         message:
-          "Gallery image created successfully.",
-        image: data,
+          "Gallery album created successfully.",
+        images: data,
       },
       {
         status: 201,

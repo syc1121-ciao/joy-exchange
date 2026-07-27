@@ -44,26 +44,87 @@ function normalizeSlug(value: string) {
 // 公開讀取已發布的 Places
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("places")
-      .select("*")
-      .eq("status", "published")
-      .order("visited_at", {
-        ascending: false,
-        nullsFirst: false,
-      });
+    const { data: placesData, error: placesError } =
+      await supabaseAdmin
+        .from("places")
+        .select("*")
+        .eq("status", "published")
+        .order("visited_at", {
+          ascending: false,
+          nullsFirst: false,
+        });
 
-    if (error) {
-      console.error("GET /api/places error:", error);
+    if (placesError) {
+      console.error("GET /api/places error:", placesError);
 
       return NextResponse.json(
-        { error: error.message },
+        { error: placesError.message },
         { status: 500 },
       );
     }
 
+    const placeIds = (placesData ?? [])
+      .map((place: any) => place.id)
+      .filter(
+        (id: unknown): id is string =>
+          typeof id === "string" && id.length > 0,
+      );
+
+    const galleryImagesByPlaceId: Record<string, string> = {};
+
+    if (placeIds.length > 0) {
+      const {
+        data: galleryData,
+        error: galleryError,
+      } = await supabaseAdmin
+        .from("gallery_images")
+        .select("place_id, image_url, sort_order, created_at")
+        .in("place_id", placeIds)
+        .order("sort_order", {
+          ascending: true,
+        })
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (galleryError) {
+        console.error(
+          "GET /api/places gallery images error:",
+          galleryError,
+        );
+      } else {
+        const firstImageByPlaceId = new Map<string, string>();
+
+        for (const image of galleryData ?? []) {
+          const placeId = image.place_id;
+
+          if (
+            typeof placeId === "string" &&
+            !firstImageByPlaceId.has(placeId)
+          ) {
+            firstImageByPlaceId.set(
+              placeId,
+              image.image_url,
+            );
+          }
+        }
+
+        for (const [placeId, imageUrl] of firstImageByPlaceId) {
+          galleryImagesByPlaceId[placeId] = imageUrl;
+        }
+      }
+    }
+
+    const places = (placesData ?? []).map((place: any) => ({
+      ...place,
+      image:
+        typeof place.id === "string"
+          ? galleryImagesByPlaceId[place.id] ?? ""
+          : "",
+    }));
+
     return NextResponse.json({
-      places: data ?? [],
+      places,
     });
   } catch (error) {
     console.error(
