@@ -1,55 +1,29 @@
-"use client";
+import { Suspense } from "react";
 
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import LoginContent from "./LoginContent";
+
+function LoginFallback() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#faf8f5] px-4">
+      <div className="w-full max-w-md rounded-[2rem] border border-black/5 bg-white p-8 shadow-sm">
+        <div className="h-4 w-24 animate-pulse rounded bg-neutral-200" />
+
+        <div className="mt-5 h-10 w-3/4 animate-pulse rounded bg-neutral-200" />
+
+        <div className="mt-4 h-5 w-full animate-pulse rounded bg-neutral-100" />
+
+        <div className="mt-2 h-5 w-4/5 animate-pulse rounded bg-neutral-100" />
+
+        <div className="mt-8 h-12 w-full animate-pulse rounded-full bg-neutral-200" />
+      </div>
+    </main>
+  );
+}
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
-
-  const callbackUrl =
-    searchParams.get("callbackUrl") ?? "/dashboard";
-
-  const [loading, setLoading] = useState(false);
-
-  async function handleGoogleLogin() {
-    setLoading(true);
-
-    try {
-      await signIn("google", {
-        callbackUrl,
-      });
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  }
-
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#faf8f5] px-6">
-      <section className="w-full max-w-md rounded-[32px] border border-neutral-200 bg-white p-10 shadow-sm">
-        <p className="text-xs uppercase tracking-[0.3em] text-neutral-400">
-          Private Studio
-        </p>
-
-        <h1 className="mt-3 font-serif text-4xl">
-          Joy's Dashboard
-        </h1>
-
-        <p className="mt-5 text-sm leading-7 text-neutral-500">
-          只有網站管理者可以登入。
-        </p>
-
-        <button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="mt-10 flex w-full items-center justify-center rounded-full bg-neutral-900 px-6 py-4 text-white transition hover:bg-neutral-700 disabled:opacity-50"
-        >
-          {loading
-            ? "Redirecting..."
-            : "Continue with Google"}
-        </button>
-      </section>
-    </main>
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
   );
 }
