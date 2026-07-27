@@ -13,6 +13,10 @@ const navigationItems = [
     label: "Journal",
     href: "/journal",
   },
+    {
+    label: "Destinations",
+    href: "/destinations",
+  },
   // {
   //   label: "Memo",
   //   href: "/memo",
