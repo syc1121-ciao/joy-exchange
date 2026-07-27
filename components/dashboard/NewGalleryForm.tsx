@@ -304,14 +304,16 @@ export default function NewGalleryForm({
       }
 
       const response = await fetch(
-        "/api/gallery",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
+  "/api/gallery/albums",
+  {
+    method: "POST",
+
+    headers: {
+      "Content-Type":
+        "application/json",
+    },
+
+    body: JSON.stringify({
   title: String(
     formData.get("title") ?? "",
   ).trim(),
@@ -325,26 +327,25 @@ export default function NewGalleryForm({
   placeId:
     String(
       formData.get("placeId") ?? "",
-    ) || null,
+    ).trim() || null,
 
   journalId:
     String(
       formData.get("journalId") ?? "",
-    ) || null,
+    ).trim() || null,
 
   takenAt:
     String(
       formData.get("takenAt") ?? "",
-    ) || null,
+    ).trim() || null,
 
   isFeatured:
     formData.get("isFeatured") === "on",
 
   images: uploadedImages,
 }),
-          
-        },
-      );
+  },
+);
 
       const result = await response.json();
 
