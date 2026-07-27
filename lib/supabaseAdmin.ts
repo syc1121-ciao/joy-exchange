@@ -1,46 +1,47 @@
-import { createClient } from "@supabase/supabase-js";
+import "server-only";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+import {
+  createClient,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 
-const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+let supabaseAdminClient:
+  | SupabaseClient
+  | null = null;
 
-if (!supabaseUrl) {
-  throw new Error(
-    "找不到 NEXT_PUBLIC_SUPABASE_URL",
-  );
-}
+export function getSupabaseAdmin() {
+  if (supabaseAdminClient) {
+    return supabaseAdminClient;
+  }
 
-if (!serviceRoleKey) {
-  throw new Error(
-    "找不到 SUPABASE_SERVICE_ROLE_KEY",
-  );
-}
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-if (!supabaseUrl.startsWith("https://")) {
-  throw new Error(
-    "NEXT_PUBLIC_SUPABASE_URL 必須是 https:// 開頭的 Supabase Project URL",
-  );
-}
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl.endsWith(".supabase.co")) {
-  throw new Error(
-    `NEXT_PUBLIC_SUPABASE_URL 格式不正確：${supabaseUrl}`,
-  );
-}
+  if (!supabaseUrl) {
+    throw new Error(
+      "缺少 NEXT_PUBLIC_SUPABASE_URL。",
+    );
+  }
 
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  serviceRoleKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
+  if (!serviceRoleKey) {
+    throw new Error(
+      "缺少 SUPABASE_SERVICE_ROLE_KEY。",
+    );
+  }
+
+  supabaseAdminClient = createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
     },
-    global: {
-      fetch: fetch.bind(globalThis),
-    },
-  },
-);
+  );
+
+  return supabaseAdminClient;
+}

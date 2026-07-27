@@ -1,134 +1,171 @@
-import { NextResponse } from "next/server";
+import {
+  getServerSession,
+} from "next-auth";
 
-import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
-type PlaceStatus = "draft" | "published";
+import {
+  authOptions,
+} from "@/lib/authOptions";
 
-type PlaceContinent =
-  | "asia"
-  | "europe"
-  | "north-america";
+import {
+  getSupabaseAdmin,
+} from "@/lib/supabaseAdmin";
+
+type PlaceType =
+  | "home"
+  | "visited"
+  | "dream"
+  | "wishlist";
+
+type PublishStatus =
+  | "draft"
+  | "published";
 
 type CreatePlaceBody = {
-  city?: string;
-  country?: string;
-  slug?: string;
-  description?: string;
-  status?: PlaceStatus;
-  continent?: string;
-  latitude?: number | string;
-  longitude?: number | string;
+  city?: unknown;
+  country?: unknown;
+  description?: unknown;
+  image?: unknown;
+  icon?: unknown;
+  placeType?: unknown;
+  publishStatus?: unknown;
+  longitude?: unknown;
+  latitude?: unknown;
 };
 
-type UpdatePlaceBody = CreatePlaceBody & {
-  id?: string;
-};
+const allowedPlaceTypes:
+  PlaceType[] = [
+    "home",
+    "visited",
+    "dream",
+    "wishlist",
+  ];
 
-const validContinents: PlaceContinent[] = [
-  "asia",
-  "europe",
-  "north-america",
-];
+const allowedPublishStatuses:
+  PublishStatus[] = [
+    "draft",
+    "published",
+  ];
 
-function normalizeSlug(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+function createSlug(
+  city: string,
+  country: string,
+) {
+  const rawSlug =
+    `${city}-${country}`
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        "",
+      )
+      .replace(
+        /[^a-z0-9\u4e00-\u9fff]+/g,
+        "-",
+      )
+      .replace(/^-+|-+$/g, "");
+
+  return (
+    rawSlug ||
+    `place-${Date.now()}`
+  );
 }
 
-// 公開讀取已發布的 Places
+function isFiniteNumber(
+  value: unknown,
+): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  );
+}
+
+async function createUniqueSlug(
+  city: string,
+  country: string,
+) {
+  const supabase =
+    getSupabaseAdmin();
+
+  const baseSlug =
+    createSlug(city, country);
+
+  let candidate = baseSlug;
+  let counter = 2;
+
+  while (true) {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("places")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      return candidate;
+    }
+
+    candidate =
+      `${baseSlug}-${counter}`;
+
+    counter += 1;
+  }
+}
+
 export async function GET() {
   try {
-    const { data: placesData, error: placesError } =
-      await supabaseAdmin
-        .from("places")
-        .select("*")
-        .eq("status", "published")
-        .order("visited_at", {
+    const supabase =
+      getSupabaseAdmin();
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("places")
+      .select(
+        `
+          id,
+          city,
+          country,
+          slug,
+          description,
+          image,
+          icon,
+          status,
+          place_type,
+          longitude,
+          latitude,
+          created_at,
+          updated_at
+        `,
+      )
+      .order(
+        "created_at",
+        {
           ascending: false,
-          nullsFirst: false,
-        });
-
-    if (placesError) {
-      console.error("GET /api/places error:", placesError);
-
-      return NextResponse.json(
-        { error: placesError.message },
-        { status: 500 },
-      );
-    }
-
-    const placeIds = (placesData ?? [])
-      .map((place: any) => place.id)
-      .filter(
-        (id: unknown): id is string =>
-          typeof id === "string" && id.length > 0,
+        },
       );
 
-    const galleryImagesByPlaceId: Record<string, string> = {};
-
-    if (placeIds.length > 0) {
-      const {
-        data: galleryData,
-        error: galleryError,
-      } = await supabaseAdmin
-        .from("gallery_images")
-        .select("place_id, image_url, sort_order, created_at")
-        .in("place_id", placeIds)
-        .order("sort_order", {
-          ascending: true,
-        })
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (galleryError) {
-        console.error(
-          "GET /api/places gallery images error:",
-          galleryError,
-        );
-      } else {
-        const firstImageByPlaceId = new Map<string, string>();
-
-        for (const image of galleryData ?? []) {
-          const placeId = image.place_id;
-
-          if (
-            typeof placeId === "string" &&
-            !firstImageByPlaceId.has(placeId)
-          ) {
-            firstImageByPlaceId.set(
-              placeId,
-              image.image_url,
-            );
-          }
-        }
-
-        for (const [placeId, imageUrl] of firstImageByPlaceId) {
-          galleryImagesByPlaceId[placeId] = imageUrl;
-        }
-      }
+    if (error) {
+      throw error;
     }
-
-    const places = (placesData ?? []).map((place: any) => ({
-      ...place,
-      image:
-        typeof place.id === "string"
-          ? galleryImagesByPlaceId[place.id] ?? ""
-          : "",
-    }));
 
     return NextResponse.json({
-      places,
+      places: data ?? [],
     });
   } catch (error) {
     console.error(
-      "GET /api/places unexpected error:",
+      "Get places error:",
       error,
     );
 
@@ -137,184 +174,229 @@ export async function GET() {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to load places.",
+            : "讀取地點失敗。",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }
 
-// 管理者新增 Place
-export async function POST(request: Request) {
+export async function POST(
+  request: NextRequest,
+) {
   try {
-    const session = await requireAdmin();
+    const session =
+      await getServerSession(
+        authOptions,
+      );
 
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
+        {
+          error: "請先登入。",
+        },
+        {
+          status: 401,
+        },
       );
     }
 
     const body =
       (await request.json()) as CreatePlaceBody;
 
-    const city = body.city?.trim();
-    const country = body.country?.trim();
-    const slug = normalizeSlug(body.slug ?? "");
+    const city =
+      typeof body.city === "string"
+        ? body.city.trim()
+        : "";
+
+    const country =
+      typeof body.country === "string"
+        ? body.country.trim()
+        : "";
+
     const description =
-      body.description?.trim() ?? "";
-    const status = body.status ?? "draft";
-    const continent =
-      body.continent?.trim().toLowerCase() ?? "";
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
+      typeof body.description ===
+      "string"
+        ? body.description.trim()
+        : "";
+
+    const image =
+      typeof body.image === "string"
+        ? body.image.trim()
+        : "";
+
+    const icon =
+      typeof body.icon === "string" &&
+      body.icon.trim()
+        ? body.icon.trim()
+        : "📍";
+
+    const placeType =
+      typeof body.placeType ===
+        "string" &&
+      allowedPlaceTypes.includes(
+        body.placeType as PlaceType,
+      )
+        ? (body.placeType as PlaceType)
+        : null;
+
+    const publishStatus =
+      typeof body.publishStatus ===
+        "string" &&
+      allowedPublishStatuses.includes(
+        body.publishStatus as PublishStatus,
+      )
+        ? (body.publishStatus as PublishStatus)
+        : null;
+
+    const longitude =
+      body.longitude;
+
+    const latitude =
+      body.latitude;
 
     if (!city) {
       return NextResponse.json(
-        { error: "City is required." },
-        { status: 400 },
+        {
+          error:
+            "請輸入城市名稱。",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     if (!country) {
       return NextResponse.json(
-        { error: "Country is required." },
-        { status: 400 },
+        {
+          error:
+            "請輸入國家名稱。",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
-    if (!slug) {
-      return NextResponse.json(
-        { error: "Slug is required." },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !continent ||
-      !validContinents.includes(
-        continent as PlaceContinent,
-      )
-    ) {
-      return NextResponse.json(
-        { error: "Continent is required." },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !Number.isFinite(latitude) ||
-      latitude < -90 ||
-      latitude > 90
-    ) {
+    if (!placeType) {
       return NextResponse.json(
         {
           error:
-            "Latitude must be a number between -90 and 90.",
+            "地點類型不正確。",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (!publishStatus) {
+      return NextResponse.json(
+        {
+          error:
+            "發布狀態不正確。",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
     if (
-      !Number.isFinite(longitude) ||
+      !isFiniteNumber(longitude) ||
       longitude < -180 ||
       longitude > 180
     ) {
       return NextResponse.json(
         {
           error:
-            "Longitude must be a number between -180 and 180.",
+            "經度資料不正確。",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
     if (
-      status !== "draft" &&
-      status !== "published"
+      !isFiniteNumber(latitude) ||
+      latitude < -90 ||
+      latitude > 90
     ) {
       return NextResponse.json(
-        { error: "Invalid status." },
-        { status: 400 },
+        {
+          error:
+            "緯度資料不正確。",
+        },
+        {
+          status: 400,
+        },
       );
     }
 
-    const authorEmail = session.user?.email
-      ?.trim()
-      .toLowerCase();
-
-    if (!authorEmail) {
-      return NextResponse.json(
-        { error: "找不到登入者的 email。" },
-        { status: 400 },
+    const slug =
+      await createUniqueSlug(
+        city,
+        country,
       );
-    }
+
+    const supabase =
+      getSupabaseAdmin();
 
     const {
-      data: existingPlace,
-      error: existingPlaceError,
-    } = await supabaseAdmin
-      .from("places")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
-
-    if (existingPlaceError) {
-      console.error(
-        "Check existing place error:",
-        existingPlaceError,
-      );
-
-      return NextResponse.json(
-        { error: existingPlaceError.message },
-        { status: 500 },
-      );
-    }
-
-    if (existingPlace) {
-      return NextResponse.json(
-        { error: "This slug already exists." },
-        { status: 409 },
-      );
-    }
-
-    const { data, error } = await supabaseAdmin
+      data,
+      error,
+    } = await supabase
       .from("places")
       .insert({
         city,
         country,
         slug,
-        description,
-        status,
-        continent,
-        latitude,
+        description:
+          description || null,
+        image: image || null,
+        icon,
+        status: publishStatus,
+        place_type: placeType,
         longitude,
-        author_email: authorEmail,
+        latitude,
       })
-      .select("*")
+      .select(
+        `
+          id,
+          city,
+          country,
+          slug,
+          description,
+          image,
+          icon,
+          status,
+          place_type,
+          longitude,
+          latitude,
+          created_at
+        `,
+      )
       .single();
 
     if (error) {
-      console.error("POST /api/places error:", error);
-
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 },
-      );
+      throw error;
     }
 
     return NextResponse.json(
       {
-        message: "Place created successfully.",
         place: data,
       },
-      { status: 201 },
+      {
+        status: 201,
+      },
     );
   } catch (error) {
     console.error(
-      "POST /api/places unexpected error:",
+      "Create place error:",
       error,
     );
 
@@ -323,263 +405,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to create place.",
-      },
-      { status: 500 },
-    );
-  }
-}
-
-// 管理者更新 Place
-export async function PATCH(request: Request) {
-  try {
-    const session = await requireAdmin();
-
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
-    const body =
-      (await request.json()) as UpdatePlaceBody;
-
-    const id = body.id?.trim();
-    const city = body.city?.trim();
-    const country = body.country?.trim();
-    const slug = normalizeSlug(body.slug ?? "");
-    const description =
-      body.description?.trim() ?? "";
-    const status = body.status ?? "draft";
-    const continent =
-      body.continent?.trim().toLowerCase() ?? "";
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Place ID is required." },
-        { status: 400 },
-      );
-    }
-
-    if (!city) {
-      return NextResponse.json(
-        { error: "City is required." },
-        { status: 400 },
-      );
-    }
-
-    if (!country) {
-      return NextResponse.json(
-        { error: "Country is required." },
-        { status: 400 },
-      );
-    }
-
-    if (!slug) {
-      return NextResponse.json(
-        { error: "Slug is required." },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !continent ||
-      !validContinents.includes(
-        continent as PlaceContinent,
-      )
-    ) {
-      return NextResponse.json(
-        { error: "Continent is required." },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !Number.isFinite(latitude) ||
-      latitude < -90 ||
-      latitude > 90
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Latitude must be a number between -90 and 90.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !Number.isFinite(longitude) ||
-      longitude < -180 ||
-      longitude > 180
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Longitude must be a number between -180 and 180.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      status !== "draft" &&
-      status !== "published"
-    ) {
-      return NextResponse.json(
-        { error: "Invalid status." },
-        { status: 400 },
-      );
-    }
-
-    const authorEmail = session.user?.email
-      ?.trim()
-      .toLowerCase();
-
-    if (!authorEmail) {
-      return NextResponse.json(
-        { error: "找不到登入者的 email。" },
-        { status: 400 },
-      );
-    }
-
-    // 確認新的 slug 沒有被其他 Place 使用
-    const {
-      data: existingPlace,
-      error: existingPlaceError,
-    } = await supabaseAdmin
-      .from("places")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", id)
-      .maybeSingle();
-
-    if (existingPlaceError) {
-      console.error(
-        "Check update slug error:",
-        existingPlaceError,
-      );
-
-      return NextResponse.json(
-        { error: existingPlaceError.message },
-        { status: 500 },
-      );
-    }
-
-    if (existingPlace) {
-      return NextResponse.json(
-        { error: "This slug already exists." },
-        { status: 409 },
-      );
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from("places")
-      .update({
-        city,
-        country,
-        slug,
-        description,
-        status,
-        continent,
-        latitude,
-        longitude,
-      })
-      .eq("id", id)
-      .eq("author_email", authorEmail)
-      .select("*")
-      .maybeSingle();
-
-    if (error) {
-      console.error("PATCH /api/places error:", error);
-
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 },
-      );
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        {
-          error:
-            "找不到這個 Place，或你沒有權限編輯。",
-        },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      message: "Place updated successfully.",
-      place: data,
-    });
-  } catch (error) {
-    console.error(
-      "PATCH /api/places unexpected error:",
-      error,
-    );
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to update place.",
-      },
-      { status: 500 },
-    );
-  }
-}
-export async function DELETE(request: Request) {
-  try {
-    const session = await requireAdmin();
-
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
-    }
-
-    const { id } = await request.json();
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Place ID is required." },
-        { status: 400 },
-      );
-    }
-
-    const authorEmail = session.user?.email
-      ?.trim()
-      .toLowerCase();
-
-    const { error } = await supabaseAdmin
-      .from("places")
-      .delete()
-      .eq("id", id)
-      .eq("author_email", authorEmail);
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({
-      message: "Place deleted successfully.",
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Delete failed.",
+            : "新增地點失敗。",
       },
       {
         status: 500,

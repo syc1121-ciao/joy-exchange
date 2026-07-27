@@ -5,9 +5,7 @@ import {
   useState,
 } from "react";
 
-import {
-  useRouter,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import PlacePickerMap, {
   type SelectedLocation,
@@ -35,9 +33,7 @@ async function readJsonSafely<T>(
   response: Response,
 ): Promise<T> {
   const contentType =
-    response.headers.get(
-      "content-type",
-    ) ?? "";
+    response.headers.get("content-type") ?? "";
 
   if (
     !contentType.includes(
@@ -112,6 +108,7 @@ export default function AddPlaceForm() {
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
     setError("");
 
     if (!location) {
@@ -123,18 +120,12 @@ export default function AddPlaceForm() {
     }
 
     if (!city.trim()) {
-      setError(
-        "請輸入城市名稱。",
-      );
-
+      setError("請輸入城市名稱。");
       return;
     }
 
     if (!country.trim()) {
-      setError(
-        "請輸入國家名稱。",
-      );
-
+      setError("請輸入國家名稱。");
       return;
     }
 
