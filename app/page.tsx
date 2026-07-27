@@ -183,14 +183,13 @@ export default function HomePage() {
             </p>
 
             <h1 className="max-w-4xl font-serif text-5xl leading-[0.95] sm:text-7xl lg:text-[6.5rem]">
-              Collect moments,
+              Ciao's
               <br />
-              not things.
+              TUM Exchange
             </h1>
 
             <p className="mt-7 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
-              一個關於交換、旅行與成長的故事。
-              從臺灣出發，在歐洲收藏屬於我的城市、日記與回憶。
+              玩遍歐洲的高山小河大海
             </p>
 
             <div className="mt-9 flex flex-wrap gap-4">
@@ -218,7 +217,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Introduction */}
+      {/* Introduction
       <section className="border-b border-[#ddd6cc]">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-24 sm:px-10 lg:grid-cols-[0.8fr_1.2fr] lg:px-12 lg:py-32">
           <div>
@@ -239,7 +238,7 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Countdown */}
 
@@ -261,8 +260,7 @@ export default function HomePage() {
               </h2>
 
               <p className="mt-6 max-w-md text-sm leading-7 text-[#66727d]">
-                每完成一個準備項目，就離德國生活更近一點。
-                這段旅程從來不只發生在抵達之後。
+                
               </p>
             </div>
 
@@ -405,8 +403,7 @@ export default function HomePage() {
             </h2>
 
             <p className="mt-6 max-w-md text-sm leading-7 text-white/65">
-              交換不是突然發生的一件事，
-              而是由一個個微小、平凡卻重要的準備累積而成。
+              
             </p>
           </div>
 

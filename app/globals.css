@@ -236,13 +236,13 @@ h4, .h4 {
 
 p {
   margin: 0 0 1rem;
-  color: var(--color-slate-700);
+  color: var(--color-slate-400);
 }
 
 .lead {
   font-size: var(--text-lg);
   line-height: var(--text-lg--line-height);
-  color: var(--color-slate-700);
+  color: var(--color-slate-300);
 }
 
 /* Container utilities (responsive max-widths) */

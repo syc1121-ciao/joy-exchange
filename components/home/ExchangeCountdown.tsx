@@ -119,8 +119,7 @@ export default function ExchangeCountdown({
               </h2>
 
               <p className="mt-6 max-w-md text-sm leading-7 text-white/65">
-                交換生活還沒正式開始，
-                但每一天都正在讓這個夢想變得更真實。
+                
               </p>
 
               <p className="mt-9 text-xs uppercase tracking-[0.22em] text-white/45">
