@@ -11,20 +11,38 @@ type UploadedImageInput = {
 
 type CreateGalleryBody = {
   title?: unknown;
+  caption?: unknown;
   description?: unknown;
+
   placeId?: unknown;
   journalId?: unknown;
+
+  takenAt?: unknown;
+  isFeatured?: unknown;
+
   images?: unknown;
 };
 
-function optionalString(value: unknown) {
+function optionalString(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
   }
 
-  const trimmedValue = value.trim();
+  const trimmed = value.trim();
 
-  return trimmedValue || null;
+  return trimmed || null;
+}
+
+function parseBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return value === "true" || value === "on";
+  }
+
+  return false;
 }
 
 export async function POST(request: Request) {
@@ -85,7 +103,7 @@ export async function POST(request: Request) {
     if (invalidImage) {
       return NextResponse.json(
         {
-          error: "照片資料格式不正確。",
+          error: "照片網址或 Storage 路徑不正確。",
         },
         {
           status: 400,
@@ -97,13 +115,13 @@ export async function POST(request: Request) {
       .trim()
       .toLowerCase();
 
-    const title =
+    const baseTitle =
       optionalString(body.title) ?? "Untitled";
 
-
-    const description = optionalString(
-      body.description,
-    );
+    // 兼容前端目前可能使用 description
+    const caption =
+      optionalString(body.caption) ??
+      optionalString(body.description);
 
     const placeId = optionalString(
       body.placeId,
@@ -113,18 +131,46 @@ export async function POST(request: Request) {
       body.journalId,
     );
 
-    const rows = images.map((image, index) => ({
-  title:
-    images.length === 1
-      ? title
-      : `${title} ${index + 1}`,
+    const takenAt = optionalString(
+      body.takenAt,
+    );
 
-  caption: description,
+    const isFeatured = parseBoolean(
+      body.isFeatured,
+    );
 
-  image_url: String(
-    image.imageUrl,
-  ).trim(),
-}));
+    const rows = images.map(
+      (image, index) => ({
+        title:
+          images.length === 1
+            ? baseTitle
+            : `${baseTitle} ${index + 1}`,
+
+        caption,
+
+        image_url: String(
+          image.imageUrl,
+        ).trim(),
+
+        storage_path: String(
+          image.storagePath,
+        ).trim(),
+
+        place_id: placeId,
+
+        journal_id: journalId,
+
+        taken_at: takenAt,
+
+        sort_order: index,
+
+        // 多張照片時只讓第一張成為精選
+        is_featured:
+          isFeatured && index === 0,
+
+        author_email: authorEmail,
+      }),
+    );
 
     const supabaseAdmin =
       getSupabaseAdmin();
@@ -133,11 +179,27 @@ export async function POST(request: Request) {
       await supabaseAdmin
         .from("gallery_images")
         .insert(rows)
-        .select();
+        .select(
+          `
+            id,
+            title,
+            caption,
+            image_url,
+            storage_path,
+            place_id,
+            journal_id,
+            taken_at,
+            sort_order,
+            is_featured,
+            author_email,
+            created_at,
+            updated_at
+          `,
+        );
 
     if (error) {
       console.error(
-        "Insert gallery error:",
+        "Insert gallery_images error:",
         error,
       );
 

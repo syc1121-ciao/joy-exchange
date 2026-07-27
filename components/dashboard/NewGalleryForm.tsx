@@ -312,29 +312,37 @@ export default function NewGalleryForm({
               "application/json",
           },
           body: JSON.stringify({
-            title: String(
-              formData.get("title") ?? "",
-            ).trim(),
+  title: String(
+    formData.get("title") ?? "",
+  ).trim(),
 
-            description: String(
-              formData.get("description") ??
-                "",
-            ).trim(),
+  caption: String(
+    formData.get("caption") ??
+      formData.get("description") ??
+      "",
+  ).trim(),
 
-            placeId:
-              String(
-                formData.get("placeId") ??
-                  "",
-              ) || null,
+  placeId:
+    String(
+      formData.get("placeId") ?? "",
+    ) || null,
 
-            journalId:
-              String(
-                formData.get("journalId") ??
-                  "",
-              ) || null,
+  journalId:
+    String(
+      formData.get("journalId") ?? "",
+    ) || null,
 
-            images: uploadedImages,
-          }),
+  takenAt:
+    String(
+      formData.get("takenAt") ?? "",
+    ) || null,
+
+  isFeatured:
+    formData.get("isFeatured") === "on",
+
+  images: uploadedImages,
+}),
+          
         },
       );
 
@@ -438,6 +446,17 @@ export default function NewGalleryForm({
               ))}
             </select>
           </label>
+          <label className="block">
+  <span className="mb-2 block text-sm font-medium text-neutral-700">
+    拍攝日期
+  </span>
+
+  <input
+    name="takenAt"
+    type="date"
+    className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-neutral-400 focus:bg-white"
+  />
+</label>
 
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-neutral-700">
@@ -470,12 +489,23 @@ export default function NewGalleryForm({
             </span>
 
             <textarea
-              name="description"
+              name="caption"
               rows={4}
               placeholder="記錄當下的故事、心情或照片內容⋯⋯"
               className="w-full resize-y rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-400 focus:bg-white"
             />
           </label>
+<label className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+  <input
+    name="isFeatured"
+    type="checkbox"
+    className="h-4 w-4 rounded border-neutral-300"
+  />
+
+  <span className="text-sm font-medium text-neutral-700">
+    設為精選照片
+  </span>
+</label>
         </div>
       </section>
 
@@ -502,6 +532,7 @@ export default function NewGalleryForm({
             </button>
           )}
         </div>
+
 
         <div className="space-y-6 p-6 sm:p-8">
           <input
