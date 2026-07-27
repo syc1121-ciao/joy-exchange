@@ -6,7 +6,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import PlacePickerMap from "./PlacePickerMap";
+import PlacePickerMap from "@/app/dashboard/places/new/PlacePickerMap";
 
 type PlaceType =
   | "home"
