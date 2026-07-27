@@ -1,8 +1,11 @@
-import type { Metadata } from "next";
 import "./globals.css";
-import FlightProvider from "@/components/flights/FlightProvider";
+
 import { Inter, Cormorant_Garamond } from "next/font/google";
+
+import FlightProvider from "@/components/flights/FlightProvider";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,18 +27,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${cormorant.variable}`}
+    >
       <body>
-  <AuthSessionProvider>
-    <FlightProvider>
-      {children}
-    </FlightProvider>
-  </AuthSessionProvider>
-</body>
+        <AuthSessionProvider>
+          <FlightProvider>
+            {children}
+          </FlightProvider>
+        </AuthSessionProvider>
+      </body>
     </html>
   );
 }

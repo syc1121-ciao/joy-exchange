@@ -117,6 +117,11 @@ async function refreshGoogleAccessToken(
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+
+  pages: {
+  signIn: "/login",
+},
   providers: [
     GoogleProvider({
       clientId:
@@ -154,33 +159,42 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
+    async signIn({ user }) {
+    const adminEmail = process.env.ADMIN_EMAIL
+      ?.trim()
+      .toLowerCase();
+
+    const userEmail = user.email
+      ?.trim()
+      .toLowerCase();
+
+    if (!adminEmail || !userEmail) {
+      return false;
+    }
+
+    return userEmail === adminEmail;
+  },
+
     async jwt({
       token,
       account,
+      user,
     }) {
       /*
        * 第一次 Google 登入時，
        * 把 OAuth token 保存到 NextAuth JWT。
        */
-      if (account) {
-        return {
-          ...token,
-
-          accessToken:
-            account.access_token,
-
-          refreshToken:
-            account.refresh_token,
-
-          accessTokenExpires:
-            account.expires_at
-              ? account.expires_at * 1000
-              : Date.now() +
-                60 * 60 * 1000,
-
-          error: undefined,
-        };
-      }
+       if (account && user) {
+      return {
+        ...token,
+        accessToken: account.access_token,
+        accessTokenExpires: account.expires_at
+          ? account.expires_at * 1000
+          : Date.now() + 3600 * 1000,
+        refreshToken: account.refresh_token,
+        user,
+      };
+    }
 
       const accessTokenExpires =
         typeof token.accessTokenExpires ===
@@ -206,29 +220,12 @@ export const authOptions: NextAuthOptions = {
       return refreshGoogleAccessToken(token);
     },
 
-    async session({
-      session,
-      token,
-    }) {
-      session.accessToken =
-        typeof token.accessToken === "string"
-          ? token.accessToken
-          : undefined;
+     async session({ session, token }) {
+    session.accessToken =
+      token.accessToken as string | undefined;
 
-      session.authError =
-        typeof token.error === "string"
-          ? token.error
-          : undefined;
-
-      return session;
-    },
+    return session;
   },
-
-  pages: {
-    /*
-     * 先使用 NextAuth 預設登入頁面，
-     * 所以這裡暫時不用設定 signIn。
-     */
   },
 
   debug:

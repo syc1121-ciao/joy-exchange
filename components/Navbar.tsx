@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
+import AdminDashboardLink from "@/components/AdminDashboardLink";
 const navItems = [
   { label: "HOME", href: "/" },
   { label: "DASHBOARD", href: "/dashboard" },
+  { label: "ADMIN DASHBOARD", href: "/admin-dashboard" },
   //{ label: "TRAVEL", href: "/travel" },
   { label: "JOURNAL", href: "/journal" },
   //{ label: "GALLERY", href: "/gallery" },
