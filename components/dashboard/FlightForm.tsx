@@ -6,19 +6,10 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-type FlightStatus =
-  | "planned"
-  | "booked"
-  | "checked_in"
-  | "completed"
-  | "cancelled"
-  | "delayed";
+import type { FlightFormData, FlightStatus, CabinClass } from "@/lib/types/flight";
 
-type CabinClass =
-  | "economy"
-  | "premium_economy"
-  | "business"
-  | "first";
+// Re-export for convenience
+export type { FlightFormData };
 
 type PlaceOption = {
   id: string;
@@ -26,45 +17,11 @@ type PlaceOption = {
   country: string;
 };
 
-export type FlightFormData = {
-  id: string;
-
-  airline: string;
-  flight_number: string;
-  booking_reference: string | null;
-
-  departure_airport: string;
-  departure_city: string | null;
-  departure_terminal: string | null;
-  departure_gate: string | null;
-  departure_time: string;
-
-  arrival_airport: string;
-  arrival_city: string | null;
-  arrival_terminal: string | null;
-  arrival_gate: string | null;
-  arrival_time: string;
-
-  seat: string | null;
-  cabin_class: CabinClass;
-  ticket_type: string | null;
-  aircraft: string | null;
-
-  price: number | null;
-  currency: string;
-
-  miles_program: string | null;
-  miles_earned: number;
-
-  status: FlightStatus;
-  arrival_place_id: string | null;
-
-  notes: string | null;
-};
-
 type FlightFormProps = {
-  places: PlaceOption[];
+  places?: PlaceOption[];
   flight?: FlightFormData;
+  onSave?: (formData: FlightFormData) => void;
+  onCancel?: () => void;
 };
 
 function toDateTimeLocal(
@@ -83,8 +40,10 @@ function toDateTimeLocal(
 }
 
 export default function FlightForm({
-  places,
+  places = [],
   flight,
+  onSave,
+  onCancel,
 }: FlightFormProps) {
   const router = useRouter();
 
@@ -260,6 +219,41 @@ export default function FlightForm({
     setErrorMessage("");
 
     try {
+      // If onSave callback is provided, use it instead of API
+      if (onSave) {
+        const formData: FlightFormData = {
+          id: flight?.id ?? "",
+          airline,
+          flight_number: flightNumber,
+          booking_reference: bookingReference || null,
+          departure_airport: departureAirport,
+          departure_city: departureCity || null,
+          departure_terminal: departureTerminal || null,
+          departure_gate: departureGate || null,
+          departure_time: new Date(departureTime).toISOString(),
+          arrival_airport: arrivalAirport,
+          arrival_city: arrivalCity || null,
+          arrival_terminal: arrivalTerminal || null,
+          arrival_gate: arrivalGate || null,
+          arrival_time: new Date(arrivalTime).toISOString(),
+          seat: seat || null,
+          cabin_class: cabinClass as CabinClass,
+          ticket_type: ticketType || null,
+          aircraft: aircraft || null,
+          price: price ? Number(price) : null,
+          currency,
+          miles_program: milesProgram || null,
+          miles_earned: milesEarned ? Number(milesEarned) : 0,
+          status: status as FlightStatus,
+          arrival_place_id: arrivalPlaceId || null,
+          notes: notes || null,
+        };
+
+        onSave(formData);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(
         "/api/flights",
         {
@@ -826,13 +820,17 @@ export default function FlightForm({
 
         <button
           type="button"
-          onClick={() =>
-            router.push(
-              isEditing && flight
-                ? `/dashboard/flights/${flight.id}`
-                : "/dashboard/flights",
-            )
-          }
+          onClick={() => {
+            if (onCancel) {
+              onCancel();
+            } else {
+              router.push(
+                isEditing && flight
+                  ? `/dashboard/flights/${flight.id}`
+                  : "/dashboard/flights",
+              );
+            }
+          }}
           className="rounded-full border border-neutral-300 px-8 py-3 transition hover:bg-neutral-50"
         >
           Cancel

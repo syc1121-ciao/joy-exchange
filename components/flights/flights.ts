@@ -1,7 +1,6 @@
-import type {
-  Flight,
-  FlightFormData,
-} from "./types";
+import type { Flight } from "./types";
+
+type FlightFormData = Omit<Flight, "id">;
 
 export const initialFlights: Flight[] = [
   {

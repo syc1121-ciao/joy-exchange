@@ -34,7 +34,6 @@ export type Flight = {
   status: FlightStatus;
 };
 
-export type FlightFormData = Omit<Flight, "id">;
 export type FlightImportCandidate = {
   calendarEventId: string;
 

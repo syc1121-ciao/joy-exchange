@@ -1,16 +1,18 @@
 "use client";
-import GoogleCalendarImport from "../dashboard/GoogleCalendarImport";
+
 import { useState } from "react";
 
-import FlightCard from "./FlightCard";
+import GoogleCalendarImport from "../dashboard/GoogleCalendarImport";
 import FlightForm from "../dashboard/FlightForm";
 
+import FlightCard from "./FlightCard";
 import { useFlights } from "./FlightProvider";
 
-import type {
-  Flight,
-  FlightFormData,
-} from "./types";
+import type { Flight } from "./types";
+import type { FlightFormData as ServerFlightFormData } from "@/lib/types/flight";
+
+// Local Flight type without id
+type LocalFlightFormData = Omit<Flight, "id">;
 
 export default function FlightManager() {
   const {
@@ -25,38 +27,95 @@ export default function FlightManager() {
     useState(false);
 
   const [editingFlight, setEditingFlight] =
-    useState<FlightFormData | null>(null);
+    useState<Flight | null>(null);
 
   function mapFlightToFormData(
     flight: Flight,
-  ): FlightFormData {
-    const { id, ...flightData } = flight;
-    return flightData;
+  ): ServerFlightFormData {
+    return {
+      id: flight.id,
+      airline: flight.airline,
+      flight_number: flight.flightNumber,
+      booking_reference: flight.bookingReference ?? null,
+      departure_airport: flight.departureAirport,
+      departure_city: flight.departureCity ?? null,
+      departure_terminal: flight.terminal ?? null,
+      departure_gate: flight.gate ?? null,
+      departure_time: flight.departureTime,
+      arrival_airport: flight.arrivalAirport,
+      arrival_city: flight.arrivalCity ?? null,
+      arrival_terminal: null,
+      arrival_gate: null,
+      arrival_time: flight.arrivalTime,
+      seat: flight.seat ?? null,
+      cabin_class: "economy",
+      ticket_type: null,
+      aircraft: null,
+      price: null,
+      currency: "TWD",
+      miles_program: null,
+      miles_earned: 0,
+      status: flight.status === "scheduled" ? "planned" : 
+              flight.status === "on-time" ? "booked" :
+              flight.status === "completed" ? "completed" :
+              flight.status === "cancelled" ? "cancelled" :
+              flight.status === "delayed" ? "delayed" : "planned",
+      arrival_place_id: null,
+      notes: flight.notes ?? null,
+    };
   }
 
-  const closeForm = () => {
+  function convertServerFormDataToLocal(
+    formData: ServerFlightFormData,
+  ): LocalFlightFormData {
+    return {
+      airline: formData.airline,
+      flightNumber: formData.flight_number,
+      bookingReference: formData.booking_reference ?? undefined,
+      departureAirport: formData.departure_airport,
+      departureCity: formData.departure_city ?? "",
+      departureTime: formData.departure_time,
+      arrivalAirport: formData.arrival_airport,
+      arrivalCity: formData.arrival_city ?? "",
+      arrivalTime: formData.arrival_time,
+      destinationSlug: "",
+      terminal: formData.departure_terminal ?? undefined,
+      gate: formData.departure_gate ?? undefined,
+      seat: formData.seat ?? undefined,
+      notes: formData.notes ?? undefined,
+      status: formData.status === "planned" ? "scheduled" :
+              formData.status === "booked" ? "on-time" :
+              formData.status === "completed" ? "completed" :
+              formData.status === "cancelled" ? "cancelled" :
+              formData.status === "delayed" ? "delayed" : "scheduled",
+    };
+  }
+
+  function closeForm() {
     setIsFormOpen(false);
     setEditingFlight(null);
-  };
+  }
 
-  const handleSave = (
-    formData: FlightFormData,
-  ) => {
+  function handleSave(
+    formData: ServerFlightFormData,
+  ) {
+    const localData = convertServerFormDataToLocal(formData);
+    
     if (editingFlight) {
       updateFlight(
         editingFlight.id,
-        formData,
+        localData,
       );
     } else {
-      addFlight(formData);
+      addFlight(localData);
     }
 
     closeForm();
-  };
+  }
 
-  const handleDelete = (
+  function handleDelete(
     flight: Flight,
-  ) => {
+  ) {
     const shouldDelete =
       window.confirm(
         `Delete ${flight.flightNumber} from ${flight.departureCity} to ${flight.arrivalCity}?`,
@@ -65,7 +124,19 @@ export default function FlightManager() {
     if (shouldDelete) {
       deleteFlight(flight.id);
     }
-  };
+  }
+
+  function handleEdit(
+    selectedFlight: Flight,
+  ) {
+    setEditingFlight(selectedFlight);
+    setIsFormOpen(true);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 
   if (!isReady) {
     return (
@@ -93,7 +164,7 @@ export default function FlightManager() {
 
         <button
           type="button"
-          className="w-full rounded-full bg-slate-950 px-6 py-4 text-xs tracking-[0.14em] text-white sm:w-auto"
+          className="w-full rounded-full bg-slate-950 px-6 py-4 text-xs tracking-[0.14em] text-white transition hover:bg-slate-800 sm:w-auto"
           onClick={() => {
             setEditingFlight(null);
             setIsFormOpen(true);
@@ -112,7 +183,13 @@ export default function FlightManager() {
           </h2>
 
           <FlightForm
-            flight={editingFlight}
+            flight={
+              editingFlight
+                ? mapFlightToFormData(
+                    editingFlight,
+                  )
+                : undefined
+            }
             onSave={handleSave}
             onCancel={closeForm}
           />
@@ -136,29 +213,16 @@ export default function FlightManager() {
             <FlightCard
               key={flight.id}
               flight={flight}
-              onEdit={(selectedFlight) => {
-                setEditingFlight(
-                  mapFlightToFormData(
-                    selectedFlight,
-                  ),
-                );
-
-                setIsFormOpen(true);
-
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
-              }}
+              onEdit={handleEdit}
               onDelete={handleDelete}
             />
           ))}
         </div>
       )}
+
       <div className="mt-8">
-  <GoogleCalendarImport />
-</div>
+        <GoogleCalendarImport />
+      </div>
     </div>
-    
   );
 }

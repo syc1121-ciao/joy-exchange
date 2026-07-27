@@ -13,10 +13,11 @@ import { initialFlights } from "./flights";
 
 import type {
   Flight,
-  FlightFormData,
 } from "./types";
 
 const STORAGE_KEY = "joy-exchange-flights";
+
+type FlightFormData = Omit<Flight, "id">;
 
 type FlightContextValue = {
   flights: Flight[];
