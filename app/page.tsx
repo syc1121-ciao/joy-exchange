@@ -163,8 +163,8 @@ export default function HomePage() {
       <section className="relative min-h-[calc(100vh-5rem)]">
         <div className="absolute inset-0">
           <Image
-            src="/images/cities/munich.jpg"
-            alt="Munich city"
+            src="/images/cities/london.jpg"
+            alt="London city"
             fill
             priority
             className="object-cover"

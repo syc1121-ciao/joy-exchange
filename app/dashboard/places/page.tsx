@@ -1,7 +1,8 @@
 import Link from "next/link";
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import DeletePlaceButton from "@/components/dashboard/DeletePlaceButton";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
 export const dynamic = "force-dynamic";
 
 type Place = {
@@ -25,7 +26,10 @@ export default async function PlacesPage() {
     });
 
   if (error) {
-    console.error("Failed to load places:", error);
+    console.error(
+      "Failed to load places:",
+      error,
+    );
 
     return (
       <div className="space-y-6">
@@ -40,7 +44,8 @@ export default async function PlacesPage() {
         </div>
 
         <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700">
-          無法讀取 Places：{error.message}
+          無法讀取 Places：
+          {error.message}
         </div>
       </div>
     );
@@ -61,15 +66,15 @@ export default async function PlacesPage() {
           </h1>
 
           <p className="mt-3 text-sm text-neutral-500">
-            管理城市、草稿與已發布內容。
+            管理夢想地點、城市資料、草稿與已發布內容。
           </p>
         </div>
 
         <Link
           href="/dashboard/places/new"
-          className="inline-flex items-center justify-center rounded-full bg-neutral-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-neutral-700"
+          className="inline-flex items-center justify-center rounded-full bg-[#17324d] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#244666]"
         >
-          + New Place
+          + Add Place
         </Link>
       </div>
 
@@ -80,14 +85,14 @@ export default async function PlacesPage() {
           </p>
 
           <p className="mt-2 text-sm text-neutral-500">
-            建立第一個城市，開始整理你的交換旅行紀錄。
+            在地圖上選擇一個城市，建立第一個夢想目的地。
           </p>
 
           <Link
             href="/dashboard/places/new"
-            className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm text-white"
+            className="mt-6 inline-flex rounded-full bg-[#17324d] px-6 py-3 text-sm text-white"
           >
-            Create Place
+            Add First Place
           </Link>
         </div>
       ) : (
@@ -106,12 +111,14 @@ export default async function PlacesPage() {
 
                     <span
                       className={
-                        place.status === "published"
+                        place.status ===
+                        "published"
                           ? "rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
                           : "rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
                       }
                     >
-                      {place.status === "published"
+                      {place.status ===
+                      "published"
                         ? "Published"
                         : "Draft"}
                     </span>
@@ -132,24 +139,26 @@ export default async function PlacesPage() {
                   )}
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3">
-  <Link
-    href={`/dashboard/places/${place.id}/edit`}
-    className="rounded-full border border-neutral-300 px-5 py-2.5 text-sm"
-  >
-    Edit
-  </Link>
+                <div className="flex shrink-0 flex-wrap items-center gap-3">
+                  <Link
+                    href={`/dashboard/places/${place.id}/edit`}
+                    className="rounded-full border border-neutral-300 px-5 py-2.5 text-sm transition hover:bg-neutral-50"
+                  >
+                    Edit
+                  </Link>
 
-  <DeletePlaceButton id={place.id} />
+                  <DeletePlaceButton
+                    id={place.id}
+                  />
 
-  <Link
-    href={`/travel/${place.slug}`}
-    target="_blank"
-    className="rounded-full bg-neutral-900 px-5 py-2.5 text-sm text-white"
-  >
-    View
-  </Link>
-</div>
+                  <Link
+                    href={`/travel/${place.slug}`}
+                    target="_blank"
+                    className="rounded-full bg-neutral-900 px-5 py-2.5 text-sm text-white transition hover:bg-neutral-700"
+                  >
+                    View
+                  </Link>
+                </div>
               </div>
             </article>
           ))}
