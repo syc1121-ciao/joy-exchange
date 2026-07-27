@@ -4,7 +4,6 @@ import {
   redirect,
 } from "next/navigation";
 
-import DeleteGalleryButton from "@/components/dashboard/DeleteGalleryButton";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -106,9 +105,7 @@ export default async function GalleryViewPage({
     ? image.place[0]
     : image.place;
 
-  const journal = Array.isArray(
-    image.journal,
-  )
+  const journal = Array.isArray(image.journal)
     ? image.journal[0]
     : image.journal;
 
@@ -129,12 +126,6 @@ export default async function GalleryViewPage({
           >
             Edit
           </Link>
-
-          <DeleteGalleryButton
-            imageId={image.id}
-            imageTitle={image.title}
-            redirectAfterDelete
-          />
         </div>
       </div>
 
