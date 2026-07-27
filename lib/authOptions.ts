@@ -221,11 +221,17 @@ export const authOptions: NextAuthOptions = {
     },
 
      async session({ session, token }) {
-    session.accessToken =
-      token.accessToken as string | undefined;
+  session.accessToken =
+    typeof token.accessToken ===
+    "string"
+      ? token.accessToken
+      : undefined;
 
-    return session;
-  },
+  session.authError =
+    token.error;
+
+  return session;
+},
   },
 
   debug:

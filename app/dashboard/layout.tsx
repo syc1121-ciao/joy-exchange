@@ -1,39 +1,29 @@
 import type { ReactNode } from "react";
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
 
-import { authOptions } from "@/lib/authOptions";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await requireAdmin();
 
-  const adminEmail = process.env.ADMIN_EMAIL
-    ?.trim()
-    .toLowerCase();
-
-  const sessionEmail = session?.user?.email
-    ?.trim()
-    .toLowerCase();
-
-  if (
-    !sessionEmail ||
-    sessionEmail !== adminEmail
-  ) {
-    redirect("/login");
+  if (!session) {
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f2ed]">
-      <div className="mx-auto grid max-w-[1500px] lg:grid-cols-[260px_1fr]">
-        <DashboardSidebar />
+    <div className="flex min-h-screen bg-[#faf8f5]">
+      <DashboardSidebar
+        name={session.user?.name ?? "Admin"}
+        email={session.user?.email ?? ""}
+      />
 
-        <main>{children}</main>
-      </div>
+      <main className="flex-1 overflow-y-auto p-10">
+        {children}
+      </main>
     </div>
   );
 }

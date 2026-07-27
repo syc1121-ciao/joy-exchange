@@ -207,7 +207,7 @@ export default function UpcomingFlight({
 
         <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div>
-            <p className="font-serif text-4xl sm:text-5xl">
+            <p className="font-serif font-ticket text-4xl sm:text-5xl">
               {nextFlight.departureAirport}
             </p>
 
@@ -245,7 +245,7 @@ export default function UpcomingFlight({
           </div>
 
           <div className="text-right">
-            <p className="font-serif text-4xl sm:text-5xl">
+            <p className="font-serif font-ticket text-4xl sm:text-5xl">
               {nextFlight.arrivalAirport}
             </p>
 
@@ -277,7 +277,7 @@ export default function UpcomingFlight({
                     : "rounded-2xl bg-[#f4f1ed] px-2 py-3 text-center"
                 }
               >
-                <p className="font-serif text-2xl">
+                <p className="font-serif font-ticket text-2xl">
                   {String(value).padStart(
                     2,
                     "0",

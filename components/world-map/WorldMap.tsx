@@ -20,7 +20,6 @@ import ContinentSelector from "./ContinentSelector";
 import MapControls from "./MapControls";
 import Marker from "./Marker";
 
-import { places } from "./places";
 import { regions } from "./regions";
 
 import {
@@ -63,6 +62,15 @@ export default function WorldMap() {
   const [isMapLoading, setIsMapLoading] =
     useState(false);
 
+  const [isPlacesLoading, setIsPlacesLoading] =
+    useState(true);
+
+  const [places, setPlaces] =
+    useState<import("./types").Place[]>([]);
+
+  const [placesError, setPlacesError] =
+    useState<string | null>(null);
+
   const [mapError, setMapError] =
     useState<string | null>(null);
 
@@ -81,6 +89,96 @@ export default function WorldMap() {
 
   const mapContainerRef =
     useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadPlaces() {
+      try {
+        setIsPlacesLoading(true);
+        setPlacesError(null);
+
+        const response = await fetch("/api/places", {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load published places.`,
+          );
+        }
+
+        const result =
+          (await response.json()) as {
+            places?: Array<{
+              id: string;
+              city: string;
+              country: string;
+              slug: string;
+              description: string | null;
+              status: "draft" | "published";
+              continent: string;
+              latitude: number;
+              longitude: number;
+            }>;
+          };
+
+        const publishedPlaces =
+          Array.isArray(result.places)
+            ? result.places
+            : [];
+
+        setPlaces(
+          publishedPlaces
+            .filter(
+              (place) =>
+                place.continent &&
+                typeof place.latitude === "number" &&
+                typeof place.longitude === "number",
+            )
+            .map((place) => ({
+              id: place.id,
+              name: place.city,
+              country: place.country,
+              continent:
+                place.continent as import("./types").Continent,
+              longitude: place.longitude,
+              latitude: place.latitude,
+              icon: "📍",
+              image: "",
+              date: "Published",
+              description:
+                place.description ??
+                "Published travel place.",
+              href: `/travel/${place.slug}`,
+              status: "dream",
+            })),
+        );
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
+          return;
+        }
+
+        console.error(error);
+        setPlacesError(
+          "Unable to load published places.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsPlacesLoading(false);
+        }
+      }
+    }
+
+    void loadPlaces();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const dragStartRef =
     useRef<PanPosition | null>(null);
@@ -103,7 +201,7 @@ export default function WorldMap() {
       places,
       selectedRegion,
     );
-  }, [selectedRegion]);
+  }, [places, selectedRegion]);
 
   useEffect(() => {
   if (!selectedRegion) {

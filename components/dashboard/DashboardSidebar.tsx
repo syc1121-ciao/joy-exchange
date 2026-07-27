@@ -1,61 +1,107 @@
-import Link from "next/link";
+"use client";
 
-const dashboardLinks = [
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
+
+const menus = [
   {
-    label: "Overview",
+    name: "Home",
+    href: "/",
+    icon: "🏡",
+  },
+  {
+    name: "Overview",
     href: "/dashboard",
+    icon: "🏠",
   },
   {
-    label: "Places",
+    name: "Places",
     href: "/dashboard/places",
+    icon: "📍",
   },
   {
-    label: "Journal",
+    name: "Journal",
     href: "/dashboard/journal",
+    icon: "📖",
   },
   {
-    label: "Flights",
+    name: "Flights",
     href: "/dashboard/flights",
+    icon: "✈️",
   },
   {
-    label: "Gallery",
+    name: "Gallery",
     href: "/dashboard/gallery",
+    icon: "🖼️",
   },
   {
-    label: "Settings",
-    href: "/dashboard/settings",
+    name: "Memo",
+    href: "/dashboard/memo",
+    icon: "📝",
   },
+  // {
+  //   name: "Settings",
+  //   href: "/dashboard/settings",
+  //   icon: "⚙️",
+  // },
 ];
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
+  const pathname = usePathname();
+
   return (
-    <aside className="h-fit rounded-[2rem] bg-slate-950 p-6 text-white lg:sticky lg:top-6">
-      <p className="text-xs uppercase tracking-[0.25em] text-white/40">
-        Joy Exchange
-      </p>
+    <aside className="flex w-72 flex-col border-r border-neutral-200 bg-white">
+      <div className="border-b border-neutral-200 p-8">
+        <p className="text-xs uppercase tracking-[0.3em] text-neutral-400">
+          Joy Exchange
+        </p>
 
-      <h2 className="mt-3 font-serif text-3xl">
-        Dashboard
-      </h2>
+        <h1 className="mt-2 font-serif text-3xl">
+          CMS
+        </h1>
+      </div>
 
-      <nav className="mt-8 space-y-2">
-        {dashboardLinks.map((link) => (
+      <nav className="flex-1 space-y-2 p-6">
+        {menus.map((menu) => (
           <Link
-            key={link.href}
-            href={link.href}
-            className="block rounded-2xl px-4 py-3 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+            key={menu.href}
+            href={menu.href}
+            className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition ${
+              pathname === menu.href
+                ? "bg-neutral-900 text-white"
+                : "hover:bg-neutral-100"
+            }`}
           >
-            {link.label}
+            <span>{menu.icon}</span>
+
+            {menu.name}
           </Link>
         ))}
       </nav>
 
-      <Link
-        href="/"
-        className="mt-8 block border-t border-white/10 pt-6 text-xs uppercase tracking-[0.15em] text-white/50"
-      >
-        ← View website
-      </Link>
+      <div className="border-t border-neutral-200 p-6">
+        <p className="font-medium">
+          {name}
+        </p>
+
+        <p className="mt-1 text-xs text-neutral-500">
+          {email}
+        </p>
+
+        <button
+          onClick={() => signOut()}
+          className="mt-5 w-full rounded-full bg-neutral-900 py-3 text-sm text-white"
+        >
+          Sign out
+        </button>
+      </div>
     </aside>
   );
 }

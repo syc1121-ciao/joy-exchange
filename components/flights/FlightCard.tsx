@@ -66,7 +66,7 @@ export default function FlightCard({
 
         <div className="mt-7 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="min-w-0">
-            <p className="font-serif text-3xl sm:text-4xl">
+            <p className="font-serif font-ticket text-3xl sm:text-4xl">
               {flight.departureAirport}
             </p>
 
@@ -82,7 +82,7 @@ export default function FlightCard({
           </div>
 
           <div className="min-w-0 text-right">
-            <p className="font-serif text-3xl sm:text-4xl">
+            <p className="font-serif font-ticket text-3xl sm:text-4xl">
               {flight.arrivalAirport}
             </p>
 

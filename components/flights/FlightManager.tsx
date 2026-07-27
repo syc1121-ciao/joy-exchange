@@ -1,9 +1,9 @@
 "use client";
-import GoogleCalendarImport from "./GoogleCalendarImport";
+import GoogleCalendarImport from "../dashboard/GoogleCalendarImport";
 import { useState } from "react";
 
 import FlightCard from "./FlightCard";
-import FlightForm from "./FlightForm";
+import FlightForm from "../dashboard/FlightForm";
 
 import { useFlights } from "./FlightProvider";
 
@@ -25,7 +25,14 @@ export default function FlightManager() {
     useState(false);
 
   const [editingFlight, setEditingFlight] =
-    useState<Flight | null>(null);
+    useState<FlightFormData | null>(null);
+
+  function mapFlightToFormData(
+    flight: Flight,
+  ): FlightFormData {
+    const { id, ...flightData } = flight;
+    return flightData;
+  }
 
   const closeForm = () => {
     setIsFormOpen(false);
@@ -131,7 +138,9 @@ export default function FlightManager() {
               flight={flight}
               onEdit={(selectedFlight) => {
                 setEditingFlight(
-                  selectedFlight,
+                  mapFlightToFormData(
+                    selectedFlight,
+                  ),
                 );
 
                 setIsFormOpen(true);
