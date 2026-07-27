@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  FormEvent,
-  useState,
-} from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type PlaceOption = {
@@ -17,11 +14,12 @@ type JournalOption = {
   title: string;
 };
 
-type GalleryImage = {
+type GalleryAlbum = {
   id: string;
   title: string;
   caption: string | null;
-  image_url: string;
+  cover_image_url: string | null;
+  cover_storage_path: string | null;
   place_id: string | null;
   journal_id: string | null;
   taken_at: string | null;
@@ -30,130 +28,129 @@ type GalleryImage = {
 };
 
 type EditGalleryFormProps = {
-  image: GalleryImage;
+  album: GalleryAlbum;
   places: PlaceOption[];
   journals: JournalOption[];
 };
 
+type UpdateAlbumResponse = {
+  success?: boolean;
+  error?: string;
+};
+
 export default function EditGalleryForm({
-  image,
+  album,
   places,
   journals,
 }: EditGalleryFormProps) {
   const router = useRouter();
 
-  const [newImage, setNewImage] =
-    useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] =
-    useState(image.image_url);
-  const [title, setTitle] = useState(
-    image.title,
-  );
+  const [title, setTitle] = useState(album.title);
   const [caption, setCaption] = useState(
-    image.caption ?? "",
+    album.caption ?? "",
   );
   const [placeId, setPlaceId] = useState(
-    image.place_id ?? "",
+    album.place_id ?? "",
   );
-  const [journalId, setJournalId] =
-    useState(image.journal_id ?? "");
+  const [journalId, setJournalId] = useState(
+    album.journal_id ?? "",
+  );
   const [takenAt, setTakenAt] = useState(
-    image.taken_at ?? "",
+    album.taken_at
+      ? album.taken_at.slice(0, 10)
+      : "",
   );
-  const [sortOrder, setSortOrder] =
-    useState(String(image.sort_order));
-  const [isFeatured, setIsFeatured] =
-    useState(image.is_featured);
+  const [sortOrder, setSortOrder] = useState(
+    String(album.sort_order ?? 0),
+  );
+  const [isFeatured, setIsFeatured] = useState(
+    album.is_featured ?? false,
+  );
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] =
     useState("");
-
-  function handleImageChange(
-    file: File | null,
-  ) {
-    setNewImage(file);
-
-    if (file) {
-      setPreviewUrl(
-        URL.createObjectURL(file),
-      );
-    } else {
-      setPreviewUrl(image.image_url);
-    }
-  }
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
+      setErrorMessage("請輸入相簿名稱。");
+      return;
+    }
+
+    const parsedSortOrder = Number.parseInt(
+      sortOrder,
+      10,
+    );
+
     setLoading(true);
     setErrorMessage("");
 
     try {
-      const formData = new FormData();
-
-      formData.append("id", image.id);
-      formData.append("title", title);
-      formData.append("caption", caption);
-      formData.append("placeId", placeId);
-      formData.append(
-        "journalId",
-        journalId,
-      );
-      formData.append("takenAt", takenAt);
-      formData.append(
-        "sortOrder",
-        sortOrder,
-      );
-      formData.append(
-        "isFeatured",
-        String(isFeatured),
-      );
-
-      if (newImage) {
-        formData.append("image", newImage);
-      }
-
       const response = await fetch(
-        "/api/gallery",
+        `/api/gallery/albums/${encodeURIComponent(
+          album.id,
+        )}`,
         {
           method: "PATCH",
-          body: formData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: trimmedTitle,
+            caption: caption.trim() || null,
+            placeId: placeId || null,
+            journalId: journalId || null,
+            takenAt: takenAt || null,
+            sortOrder: Number.isNaN(
+              parsedSortOrder,
+            )
+              ? 0
+              : parsedSortOrder,
+            isFeatured,
+          }),
         },
       );
 
-      const result = (await response.json()) as {
-        error?: string;
-      };
+      const result =
+        (await response.json()) as UpdateAlbumResponse;
 
       if (!response.ok) {
         throw new Error(
-          result.error ?? "更新失敗。",
+          result.error ?? "更新相簿失敗。",
         );
       }
 
       router.push(
-        `/dashboard/gallery/${image.id}`,
+        `/dashboard/gallery/${album.id}`,
       );
       router.refresh();
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "更新失敗，請稍後再試。",
+          : "更新相簿失敗，請稍後再試。",
       );
     } finally {
       setLoading(false);
     }
   }
 
+  function handleCancel() {
+    router.push(
+      `/dashboard/gallery/${album.id}`,
+    );
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm"
+      className="space-y-6 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8"
     >
       {errorMessage && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -161,63 +158,45 @@ export default function EditGalleryForm({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-3xl bg-neutral-100">
-        <img
-          src={previewUrl}
-          alt={title}
-          className="max-h-[500px] w-full object-contain"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="image"
-          className="mb-2 block font-medium"
-        >
-          Replace Image
-        </label>
-
-        <input
-          id="image"
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={(event) =>
-            handleImageChange(
-              event.target.files?.[0] ??
-                null,
-            )
-          }
-          className="w-full rounded-xl border border-neutral-300 p-3"
-        />
-
-        <p className="mt-2 text-sm text-neutral-500">
-          不選擇新檔案就會保留目前圖片。
-        </p>
-      </div>
+      {album.cover_image_url ? (
+        <div className="overflow-hidden rounded-3xl bg-neutral-100">
+          <img
+            src={album.cover_image_url}
+            alt={title || "Album cover"}
+            className="max-h-[500px] w-full object-contain"
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-[260px] items-center justify-center rounded-3xl bg-neutral-100 px-6 text-center text-sm text-neutral-400">
+          此相簿目前沒有封面圖片
+        </div>
+      )}
 
       <div>
         <label
           htmlFor="title"
-          className="mb-2 block font-medium"
+          className="mb-2 block text-sm font-medium text-neutral-800"
         >
-          Title
+          Album Title
         </label>
 
         <input
           id="title"
+          type="text"
           value={title}
           onChange={(event) =>
             setTitle(event.target.value)
           }
           required
-          className="w-full rounded-xl border border-neutral-300 p-3"
+          disabled={loading}
+          className="w-full rounded-xl border border-neutral-300 bg-white p-3 outline-none transition focus:border-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100"
         />
       </div>
 
       <div>
         <label
           htmlFor="caption"
-          className="mb-2 block font-medium"
+          className="mb-2 block text-sm font-medium text-neutral-800"
         >
           Caption
         </label>
@@ -229,14 +208,15 @@ export default function EditGalleryForm({
           onChange={(event) =>
             setCaption(event.target.value)
           }
-          className="w-full rounded-xl border border-neutral-300 p-3"
+          disabled={loading}
+          className="w-full resize-y rounded-xl border border-neutral-300 bg-white p-3 outline-none transition focus:border-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100"
         />
       </div>
 
       <div>
         <label
           htmlFor="place"
-          className="mb-2 block font-medium"
+          className="mb-2 block text-sm font-medium text-neutral-800"
         >
           Place
         </label>
@@ -247,7 +227,8 @@ export default function EditGalleryForm({
           onChange={(event) =>
             setPlaceId(event.target.value)
           }
-          className="w-full rounded-xl border border-neutral-300 bg-white p-3"
+          disabled={loading}
+          className="w-full rounded-xl border border-neutral-300 bg-white p-3 outline-none transition focus:border-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100"
         >
           <option value="">
             No related place
@@ -267,7 +248,7 @@ export default function EditGalleryForm({
       <div>
         <label
           htmlFor="journal"
-          className="mb-2 block font-medium"
+          className="mb-2 block text-sm font-medium text-neutral-800"
         >
           Journal
         </label>
@@ -278,7 +259,8 @@ export default function EditGalleryForm({
           onChange={(event) =>
             setJournalId(event.target.value)
           }
-          className="w-full rounded-xl border border-neutral-300 bg-white p-3"
+          disabled={loading}
+          className="w-full rounded-xl border border-neutral-300 bg-white p-3 outline-none transition focus:border-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100"
         >
           <option value="">
             No related journal
@@ -299,7 +281,7 @@ export default function EditGalleryForm({
         <div>
           <label
             htmlFor="takenAt"
-            className="mb-2 block font-medium"
+            className="mb-2 block text-sm font-medium text-neutral-800"
           >
             Taken Date
           </label>
@@ -311,14 +293,15 @@ export default function EditGalleryForm({
             onChange={(event) =>
               setTakenAt(event.target.value)
             }
-            className="w-full rounded-xl border border-neutral-300 p-3"
+            disabled={loading}
+            className="w-full rounded-xl border border-neutral-300 bg-white p-3 outline-none transition focus:border-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100"
           />
         </div>
 
         <div>
           <label
             htmlFor="sortOrder"
-            className="mb-2 block font-medium"
+            className="mb-2 block text-sm font-medium text-neutral-800"
           >
             Sort Order
           </label>
@@ -328,37 +311,41 @@ export default function EditGalleryForm({
             type="number"
             value={sortOrder}
             onChange={(event) =>
-              setSortOrder(
-                event.target.value,
-              )
+              setSortOrder(event.target.value)
             }
-            className="w-full rounded-xl border border-neutral-300 p-3"
+            disabled={loading}
+            className="w-full rounded-xl border border-neutral-300 bg-white p-3 outline-none transition focus:border-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100"
           />
         </div>
       </div>
 
-      <label className="flex items-center gap-3 rounded-2xl border border-neutral-200 p-4">
+      <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-neutral-200 p-4">
         <input
           type="checkbox"
           checked={isFeatured}
           onChange={(event) =>
-            setIsFeatured(
-              event.target.checked,
-            )
+            setIsFeatured(event.target.checked)
           }
-          className="h-4 w-4"
+          disabled={loading}
+          className="h-4 w-4 disabled:cursor-not-allowed"
         />
 
-        <span className="font-medium">
-          Featured image
-        </span>
+        <div>
+          <p className="font-medium text-neutral-800">
+            Featured album
+          </p>
+
+          <p className="mt-1 text-sm text-neutral-500">
+            將這本相簿標記為精選相簿。
+          </p>
+        </div>
       </label>
 
       <div className="flex flex-wrap gap-3 border-t border-neutral-100 pt-6">
         <button
           type="submit"
           disabled={loading}
-          className="rounded-full bg-neutral-900 px-8 py-3 text-white disabled:opacity-50"
+          className="rounded-full bg-neutral-900 px-8 py-3 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading
             ? "Saving..."
@@ -367,12 +354,9 @@ export default function EditGalleryForm({
 
         <button
           type="button"
-          onClick={() =>
-            router.push(
-              `/dashboard/gallery/${image.id}`,
-            )
-          }
-          className="rounded-full border border-neutral-300 px-8 py-3"
+          onClick={handleCancel}
+          disabled={loading}
+          className="rounded-full border border-neutral-300 px-8 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Cancel
         </button>

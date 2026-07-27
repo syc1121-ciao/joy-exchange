@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-import { requireAdmin } from "@/lib/requireAdmin";
+import { authOptions } from "@/lib/authOptions";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 type UpdateAlbumBody = {
@@ -9,9 +10,8 @@ type UpdateAlbumBody = {
   placeId?: unknown;
   journalId?: unknown;
   takenAt?: unknown;
+  sortOrder?: unknown;
   isFeatured?: unknown;
-  coverImageUrl?: unknown;
-  coverStoragePath?: unknown;
 };
 
 function optionalString(value: unknown): string | null {
@@ -20,7 +20,15 @@ function optionalString(value: unknown): string | null {
   }
 
   const trimmed = value.trim();
+
   return trimmed || null;
+}
+
+async function requireLoggedInUser() {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email?.trim().toLowerCase();
+
+  return email ?? null;
 }
 
 export async function PATCH(
@@ -32,12 +40,12 @@ export async function PATCH(
   },
 ) {
   try {
-    const session = await requireAdmin();
+    const authorEmail = await requireLoggedInUser();
 
-    if (!session?.user?.email) {
+    if (!authorEmail) {
       return NextResponse.json(
         {
-          error: "Unauthorized",
+          error: "請先登入。",
         },
         {
           status: 401,
@@ -61,6 +69,12 @@ export async function PATCH(
       );
     }
 
+    const sortOrder =
+      typeof body.sortOrder === "number" &&
+      Number.isFinite(body.sortOrder)
+        ? Math.trunc(body.sortOrder)
+        : 0;
+
     const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
@@ -71,16 +85,31 @@ export async function PATCH(
         place_id: optionalString(body.placeId),
         journal_id: optionalString(body.journalId),
         taken_at: optionalString(body.takenAt),
-        is_featured: Boolean(body.isFeatured),
-        cover_image_url: optionalString(body.coverImageUrl),
-        cover_storage_path: optionalString(body.coverStoragePath),
+        sort_order: sortOrder,
+        is_featured: body.isFeatured === true,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select()
+      .select(
+        `
+          id,
+          title,
+          caption,
+          cover_image_url,
+          cover_storage_path,
+          place_id,
+          journal_id,
+          taken_at,
+          sort_order,
+          is_featured,
+          updated_at
+        `,
+      )
       .single();
 
     if (error) {
+      console.error("Update album error:", error);
+
       return NextResponse.json(
         {
           error: error.message,
@@ -92,10 +121,11 @@ export async function PATCH(
     }
 
     return NextResponse.json({
+      success: true,
       album: data,
     });
   } catch (error) {
-    console.error("Update gallery album error:", error);
+    console.error("Update album route error:", error);
 
     return NextResponse.json(
       {
@@ -120,12 +150,12 @@ export async function DELETE(
   },
 ) {
   try {
-    const session = await requireAdmin();
+    const authorEmail = await requireLoggedInUser();
 
-    if (!session?.user?.email) {
+    if (!authorEmail) {
       return NextResponse.json(
         {
-          error: "Unauthorized",
+          error: "請先登入。",
         },
         {
           status: 401,
@@ -136,10 +166,11 @@ export async function DELETE(
     const { id } = await context.params;
     const supabase = getSupabaseAdmin();
 
-    const { data: images, error: imagesError } = await supabase
-      .from("gallery_images")
-      .select("storage_path")
-      .eq("album_id", id);
+    const { data: images, error: imagesError } =
+      await supabase
+        .from("gallery_images")
+        .select("storage_path")
+        .eq("album_id", id);
 
     if (imagesError) {
       return NextResponse.json(
@@ -154,14 +185,24 @@ export async function DELETE(
 
     const storagePaths = (images ?? [])
       .map((image) => image.storage_path)
-      .filter((path): path is string => Boolean(path));
+      .filter(
+        (path): path is string =>
+          typeof path === "string" &&
+          path.length > 0,
+      );
 
     if (storagePaths.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from("gallery")
-        .remove(storagePaths);
+      const { error: storageError } =
+        await supabase.storage
+          .from("gallery")
+          .remove(storagePaths);
 
       if (storageError) {
+        console.error(
+          "Delete storage images error:",
+          storageError,
+        );
+
         return NextResponse.json(
           {
             error: storageError.message,
@@ -173,10 +214,11 @@ export async function DELETE(
       }
     }
 
-    const { error: deleteError } = await supabase
-      .from("gallery_albums")
-      .delete()
-      .eq("id", id);
+    const { error: deleteError } =
+      await supabase
+        .from("gallery_albums")
+        .delete()
+        .eq("id", id);
 
     if (deleteError) {
       return NextResponse.json(
@@ -193,7 +235,7 @@ export async function DELETE(
       success: true,
     });
   } catch (error) {
-    console.error("Delete gallery album error:", error);
+    console.error("Delete album route error:", error);
 
     return NextResponse.json(
       {

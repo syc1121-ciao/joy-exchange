@@ -4,26 +4,27 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type DeleteGalleryButtonProps = {
-  imageId: string;
-  imageTitle: string;
+  albumId: string;
+  albumTitle: string;
   redirectAfterDelete?: boolean;
 };
 
 export default function DeleteGalleryButton({
-  imageId,
-  imageTitle,
+  albumId,
+  albumTitle,
   redirectAfterDelete = false,
 }: DeleteGalleryButtonProps) {
   const router = useRouter();
 
   const [isDeleting, setIsDeleting] =
     useState(false);
+
   const [errorMessage, setErrorMessage] =
     useState("");
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `確定要刪除「${imageTitle}」嗎？\n\n圖片檔案也會一起刪除，且無法復原。`,
+      `確定要刪除相簿「${albumTitle}」嗎？\n\n相簿內的所有照片與圖片檔案都會一起刪除，而且無法復原。`,
     );
 
     if (!confirmed) {
@@ -35,8 +36,8 @@ export default function DeleteGalleryButton({
 
     try {
       const response = await fetch(
-        `/api/gallery?id=${encodeURIComponent(
-          imageId,
+        `/api/gallery/albums/${encodeURIComponent(
+          albumId,
         )}`,
         {
           method: "DELETE",
@@ -49,7 +50,7 @@ export default function DeleteGalleryButton({
 
       if (!response.ok) {
         throw new Error(
-          result.error ?? "刪除失敗。",
+          result.error ?? "刪除相簿失敗。",
         );
       }
 
@@ -62,7 +63,7 @@ export default function DeleteGalleryButton({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "刪除失敗，請稍後再試。",
+          : "刪除相簿失敗，請稍後再試。",
       );
     } finally {
       setIsDeleting(false);
@@ -77,7 +78,9 @@ export default function DeleteGalleryButton({
         disabled={isDeleting}
         className="rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:border-red-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isDeleting ? "Deleting..." : "Delete"}
+        {isDeleting
+          ? "Deleting..."
+          : "Delete Album"}
       </button>
 
       {errorMessage && (
