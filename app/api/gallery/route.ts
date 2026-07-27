@@ -141,7 +141,7 @@ export async function POST(request: Request) {
 
     const { data, error } =
       await supabaseAdmin
-        .from("gallery")
+        .from("gallery_images")
         .insert(rows)
         .select();
 
