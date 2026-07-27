@@ -4,8 +4,6 @@ import NewGalleryForm from "@/components/dashboard/NewGalleryForm";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
-const supabaseAdmin = getSupabaseAdmin();
-
 export const dynamic = "force-dynamic";
 
 export default async function NewGalleryPage() {
@@ -19,24 +17,25 @@ export default async function NewGalleryPage() {
     .trim()
     .toLowerCase();
 
-  const [placesResult, journalsResult] =
-    await Promise.all([
-      supabaseAdmin
-        .from("places")
-        .select("id, city, country")
-        .eq("author_email", authorEmail)
-        .order("city", {
-          ascending: true,
-        }),
+  const supabaseAdmin = getSupabaseAdmin();
 
-      supabaseAdmin
-        .from("journals")
-        .select("id, title")
-        .eq("author_email", authorEmail)
-        .order("created_at", {
-          ascending: false,
-        }),
-    ]);
+  const [placesResult, journalsResult] = await Promise.all([
+    supabaseAdmin
+      .from("places")
+      .select("id, city, country")
+      .eq("author_email", authorEmail)
+      .order("city", {
+        ascending: true,
+      }),
+
+    supabaseAdmin
+      .from("journals")
+      .select("id, title")
+      .eq("author_email", authorEmail)
+      .order("created_at", {
+        ascending: false,
+      }),
+  ]);
 
   if (placesResult.error) {
     return (
@@ -56,6 +55,17 @@ export default async function NewGalleryPage() {
     );
   }
 
+  const places = (placesResult.data ?? []).map((place) => ({
+    id: String(place.id),
+    city: String(place.city ?? ""),
+    country: String(place.country ?? ""),
+  }));
+
+  const journals = (journalsResult.data ?? []).map((journal) => ({
+    id: String(journal.id),
+    title: String(journal.title ?? ""),
+  }));
+
   return (
     <div className="space-y-8">
       <div>
@@ -73,10 +83,8 @@ export default async function NewGalleryPage() {
       </div>
 
       <NewGalleryForm
-        places={placesResult.data ?? []}
-        journals={
-          journalsResult.data ?? []
-        }
+        places={places}
+        journals={journals}
       />
     </div>
   );

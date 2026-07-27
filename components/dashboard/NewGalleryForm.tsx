@@ -2,8 +2,25 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+type PlaceOption = {
+  id: string;
+  city: string;
+  country: string;
+};
 
-export default function NewGalleryForm() {
+type JournalOption = {
+  id: string;
+  title: string;
+};
+
+type NewGalleryFormProps = {
+  places: PlaceOption[];
+  journals: JournalOption[];
+};
+export default function NewGalleryForm({
+  places,
+  journals,
+}: NewGalleryFormProps) {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
