@@ -9,38 +9,60 @@ export const dynamic = "force-dynamic";
 type UploadedImage = {
   imageUrl?: unknown;
   storagePath?: unknown;
+  originalName?: unknown;
 };
 
 type CreateAlbumBody = {
   title?: unknown;
   caption?: unknown;
-
   placeId?: unknown;
   journalId?: unknown;
-
   takenAt?: unknown;
   isFeatured?: unknown;
-
   images?: unknown;
 };
 
 type NormalizedImage = {
   imageUrl: string;
   storagePath: string;
+  originalName: string | null;
 };
 
-function getOptionalString(value: unknown): string | null {
+function getOptionalString(
+  value: unknown,
+): string | null {
   if (typeof value !== "string") {
     return null;
   }
 
   const trimmed = value.trim();
 
-  return trimmed.length > 0 ? trimmed : null;
+  return trimmed.length > 0
+    ? trimmed
+    : null;
 }
 
-function getRequiredString(value: unknown): string | null {
+function getRequiredString(
+  value: unknown,
+): string | null {
   return getOptionalString(value);
+}
+
+function createImageTitle(
+  originalName: string | null,
+  albumTitle: string,
+  index: number,
+) {
+  if (originalName) {
+    const fileNameWithoutExtension =
+      originalName.replace(/\.[^/.]+$/, "").trim();
+
+    if (fileNameWithoutExtension) {
+      return fileNameWithoutExtension;
+    }
+  }
+
+  return `${albumTitle} ${index + 1}`;
 }
 
 function normalizeImages(
@@ -71,6 +93,10 @@ function normalizeImages(
       uploadedImage.storagePath,
     );
 
+    const originalName = getOptionalString(
+      uploadedImage.originalName,
+    );
+
     if (!imageUrl || !storagePath) {
       return null;
     }
@@ -78,6 +104,7 @@ function normalizeImages(
     images.push({
       imageUrl,
       storagePath,
+      originalName,
     });
   }
 
@@ -184,10 +211,8 @@ export async function POST(
       .insert({
         title,
         caption,
-
         place_id: placeId,
         journal_id: journalId,
-
         taken_at: takenAt,
 
         cover_image_url:
@@ -200,9 +225,7 @@ export async function POST(
           body.isFeatured === true,
 
         sort_order: 0,
-
-        author_email:
-          authorEmail,
+        author_email: authorEmail,
 
         updated_at:
           new Date().toISOString(),
@@ -247,29 +270,37 @@ export async function POST(
     createdAlbumId =
       createdAlbum.id as string;
 
+    const now = new Date().toISOString();
+
     const imageRows = images.map(
       (image, index) => ({
         album_id: createdAlbumId,
 
-        image_url:
-          image.imageUrl,
-
-        storage_path:
-          image.storagePath,
-
-        sort_order:
+        // gallery_images.title 是 NOT NULL，
+        // 優先使用原始檔名，沒有檔名時使用相簿名稱。
+        title: createImageTitle(
+          image.originalName,
+          title,
           index,
+        ),
 
-        /*
-         * gallery_images 現有資料表的
-         * author_email 是 not null，
-         * 因此這裡仍然需要寫入。
-         */
-        author_email:
-          authorEmail,
+        // 相簿內的照片共用相簿說明。
+        caption,
 
-        updated_at:
-          new Date().toISOString(),
+        image_url: image.imageUrl,
+        storage_path: image.storagePath,
+
+        place_id: placeId,
+        journal_id: journalId,
+        taken_at: takenAt,
+
+        is_featured:
+          body.isFeatured === true &&
+          index === 0,
+
+        sort_order: index,
+        author_email: authorEmail,
+        updated_at: now,
       }),
     );
 
@@ -283,6 +314,8 @@ export async function POST(
         `
           id,
           album_id,
+          title,
+          caption,
           image_url,
           storage_path,
           sort_order,
@@ -297,17 +330,10 @@ export async function POST(
         imagesError,
       );
 
-      /*
-       * gallery_images 新增失敗時，
-       * 刪除剛剛建立的空相簿。
-       */
       await supabase
         .from("gallery_albums")
         .delete()
-        .eq(
-          "id",
-          createdAlbumId,
-        );
+        .eq("id", createdAlbumId);
 
       createdAlbumId = null;
 
@@ -326,12 +352,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: true,
-
         album: createdAlbum,
-
-        images:
-          createdImages ?? [],
-
+        images: createdImages ?? [],
         imageCount:
           createdImages?.length ??
           images.length,
@@ -346,20 +368,13 @@ export async function POST(
       error,
     );
 
-    /*
-     * 避免發生非預期錯誤時，
-     * 留下一個沒有照片的相簿。
-     */
     if (createdAlbumId) {
       const {
         error: cleanupError,
       } = await supabase
         .from("gallery_albums")
         .delete()
-        .eq(
-          "id",
-          createdAlbumId,
-        );
+        .eq("id", createdAlbumId);
 
       if (cleanupError) {
         console.error(
