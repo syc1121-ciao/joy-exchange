@@ -1,13 +1,17 @@
-export default function DashboardPage() {
+import { requireAdmin } from "@/lib/requireAdmin";
+
+export default async function DashboardPage() {
+  const session = await requireAdmin();
+
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-          Dashboard
+    <div>
+      <div className="mb-8">
+        <p className="text-sm text-neutral-500">
+          Welcome back
         </p>
 
-        <h1 className="mt-2 text-4xl font-semibold">
-          Welcome back 👋
+        <h1 className="mt-2 text-3xl font-semibold text-neutral-900">
+          {session.user?.name ?? "Admin"}
         </h1>
       </div>
 
