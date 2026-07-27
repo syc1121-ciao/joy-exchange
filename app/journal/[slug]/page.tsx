@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 
 import JournalArticle from "@/components/journal/JournalArticle";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 import type { JournalPost } from "@/lib/types/journal";
 
 export const dynamic = "force-dynamic";

@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import GoogleCalendarImport from "@/components/dashboard/GoogleCalendarImport";
 import DeleteFlightButton from "@/components/dashboard/DeleteFlightButton";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic =
   "force-dynamic";

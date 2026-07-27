@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import EditPlaceForm from "@/components/dashboard/EditPlaceForm";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic = "force-dynamic";
 

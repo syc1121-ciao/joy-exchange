@@ -6,7 +6,9 @@ import {
 
 import DeleteJournalButton from "@/components/dashboard/DeleteJournalButton";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic = "force-dynamic";
 

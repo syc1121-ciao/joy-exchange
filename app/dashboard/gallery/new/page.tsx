@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 
 import NewGalleryForm from "@/components/dashboard/NewGalleryForm";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic = "force-dynamic";
 

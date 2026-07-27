@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 
 import DeleteGalleryButton from "@/components/dashboard/DeleteGalleryButton";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic = "force-dynamic";
 

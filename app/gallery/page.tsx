@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 function normalizeCitySlug(value: string) {
   return value

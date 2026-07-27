@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 const BUCKET_NAME =
   "flight-documents";

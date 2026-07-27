@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 
 import NewJournalForm from "@/components/dashboard/NewJournalForm";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic = "force-dynamic";
 

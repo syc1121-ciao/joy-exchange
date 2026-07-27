@@ -8,7 +8,9 @@ import {
 import DeleteFlightButton from "@/components/dashboard/DeleteFlightButton";
 import FlightDocumentUploader from "@/components/dashboard/FlightDocumentUploader";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+const supabaseAdmin = getSupabaseAdmin();
 
 export const dynamic =
   "force-dynamic";

@@ -11,7 +11,7 @@ import {
 
 import PlacePickerMap, {
   type SelectedLocation,
-} from "./PlacePickerMap";
+} from "./new/PlacePickerMap";
 
 type PlaceType =
   | "home"
