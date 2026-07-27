@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 import PlacePickerMap, {
   type SelectedLocation,
-} from "./PlacePickerMap";
+} from "@/app/dashboard/places/new/PlacePickerMap";
 
 type PlaceType =
   | "home"
