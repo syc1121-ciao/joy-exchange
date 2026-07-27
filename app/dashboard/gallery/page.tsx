@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import DeleteGalleryButton from "@/components/dashboard/DeleteGalleryButton";
+
 import { requireAdmin } from "@/lib/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -212,10 +212,7 @@ export default async function GalleryPage() {
                       Edit
                     </Link>
 
-                    <DeleteGalleryButton
-                      imageId={image.id}
-                      imageTitle={image.title}
-                    />
+                    
                   </div>
                 </div>
               </article>
