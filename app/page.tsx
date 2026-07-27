@@ -195,7 +195,7 @@ export default function HomePage() {
             <div className="mt-9 flex flex-wrap gap-4">
               <Link
                 href="/journal"
-                className="rounded-full bg-white px-7 py-3.5 text-sm font-medium text-[#17324d] transition hover:bg-white/90"
+                className="rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-medium !text-[#0e1726] backdrop-blur-md transition hover:bg-white/20"
               >
                 Explore Journal
               </Link>
@@ -555,7 +555,7 @@ export default function HomePage() {
 
           <Link
             href="/destinations"
-            className="mt-9 inline-flex rounded-full bg-[#17324d] px-7 py-3.5 text-sm font-medium text-white transition hover:bg-[#244666]"
+            className="mt-9 inline-flex rounded-full bg-[#00000] px-7 py-3.5 text-sm font-medium text-[#162c47] transition hover:bg-[#244666]"
           >
             Explore My Map
           </Link>
