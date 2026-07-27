@@ -170,10 +170,14 @@ export default function EditPlaceForm({
 
         <select
           id="continent"
-          value={continent}
-          onChange={(event) =>
-            setContinent(event.target.value)
-          }
+          value={continent}onChange={(event) =>
+  setContinent(
+    event.target.value as
+      | "asia"
+      | "europe"
+      | "north-america",
+  )
+}
           required
           className="w-full rounded-xl border border-neutral-300 p-3 outline-none transition focus:border-neutral-900"
         >
