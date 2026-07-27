@@ -102,23 +102,38 @@ export default function NewGalleryForm({
         formData.append("images", image);
       });
 
-      const response = await fetch(
-        "/api/gallery",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch("/api/gallery", {
+  method: "POST",
+  body: formData,
+});
 
-      const result = (await response.json()) as {
-        error?: string;
-      };
+const contentType =
+  response.headers.get("content-type") ?? "";
 
-      if (!response.ok) {
-        throw new Error(
-          result.error ?? "上傳失敗。",
-        );
-      }
+let result: {
+  error?: string;
+  message?: string;
+} | null = null;
+
+if (contentType.includes("application/json")) {
+  result = await response.json();
+} else {
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      text || `上傳失敗，狀態碼：${response.status}`,
+    );
+  }
+}
+
+if (!response.ok) {
+  throw new Error(
+    result?.error ??
+      result?.message ??
+      `上傳失敗，狀態碼：${response.status}`,
+  );
+}
 
       router.push("/dashboard/gallery");
       router.refresh();
