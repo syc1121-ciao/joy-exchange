@@ -5,7 +5,9 @@ import {
 import DestinationsMap, {
   type PublicPlace,
 } from "./DestinationsMap";
-
+// import WorldMap, {
+//   type PublicPlace,
+// } from "@components/world-map/WorldMap";
 export const dynamic =
   "force-dynamic";
 

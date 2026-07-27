@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 type PlaceOption = {
   id: string;
@@ -44,24 +44,7 @@ const GALLERY_BUCKET = "gallery";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const MAX_FILE_COUNT = 30;
 
-function createBrowserSupabaseClient() {
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "缺少 NEXT_PUBLIC_SUPABASE_URL 或 NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    );
-  }
-
-  return createClient(
-    supabaseUrl,
-    supabaseAnonKey,
-  );
-}
 
 function createImageId(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
@@ -255,8 +238,7 @@ export default function NewGalleryForm({
     const uploadedImages: UploadedImage[] = [];
 
     try {
-      const supabase =
-        createBrowserSupabaseClient();
+      
 
       for (
         let index = 0;
