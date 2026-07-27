@@ -100,6 +100,7 @@ export async function POST(request: Request) {
     const title =
       optionalString(body.title) ?? "Untitled";
 
+
     const description = optionalString(
       body.description,
     );
@@ -112,29 +113,18 @@ export async function POST(request: Request) {
       body.journalId,
     );
 
-    const rows = images.map(
-      (image, index) => ({
-        title:
-          images.length === 1
-            ? title
-            : `${title} ${index + 1}`,
+    const rows = images.map((image, index) => ({
+  title:
+    images.length === 1
+      ? title
+      : `${title} ${index + 1}`,
 
-        description,
+  caption: description,
 
-        place_id: placeId,
-        journal_id: journalId,
-
-        image_url: String(
-          image.imageUrl,
-        ).trim(),
-
-        storage_path: String(
-          image.storagePath,
-        ).trim(),
-
-        author_email: authorEmail,
-      }),
-    );
+  image_url: String(
+    image.imageUrl,
+  ).trim(),
+}));
 
     const supabaseAdmin =
       getSupabaseAdmin();
